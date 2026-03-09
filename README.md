@@ -1,8 +1,8 @@
 # GameJam_26
 
-##Tower of Boohbah (Tower of Babel)
+## Tower of Boohbah (Tower of Babel)
 
-##Requirements
+## Requirements
 - [ ] dungeon rouge crawler
 - [ ] fight multiple enemies in waves per round
 - [ ] Only have 3 hearts from the start
@@ -20,7 +20,7 @@
   - [ ] some bosses will spawn smaller enemies instead of having one long line of arrows
 
 
-##Later additions if theres time
+## Later additions if theres time
 - [ ] you can select different characters before game starts
 - [ ] have pets to deal arrows, can be obtained after a boss
 - [ ] have recurring cards that increase cards you already have
