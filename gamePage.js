@@ -36,7 +36,6 @@ const faces = [
     "enemyAssets/faces/face_g.png",
     "enemyAssets/faces/face_h.png",
     "enemyAssets/faces/face_i.png",
-    "enemyAssets/faces/face_j.png",
     "enemyAssets/faces/face_k.png",
     "enemyAssets/faces/face_l.png",
 ];
@@ -200,13 +199,20 @@ function calculateEnemies(round, wave) {
     return enemiesForThisWave;
 }
 
-// Function to spawn enemies gradually, each with a random face
+// ------------------------
+// ENEMY COMBO STORAGE
+// ------------------------
+
+// We'll store all enemy combos in a global array
+const enemyCombos = [];
+
+// Function to spawn enemies gradually with combos
 function spawnEnemiesForWave(round, wave) {
     const enemiesToSpawn = calculateEnemies(round, wave);
     let spawnedCount = 0;
 
-    const maxSimultaneous = 2; // max enemies spawning at once
-    const spawnIntervalTime = 1000; // 1 second per batch
+    const maxSimultaneous = 2;
+    const spawnIntervalTime = 2000;
 
     const enemies = [];
 
@@ -214,49 +220,120 @@ function spawnEnemiesForWave(round, wave) {
         const enemiesThisBatch = Math.min(maxSimultaneous, enemiesToSpawn - spawnedCount);
 
         for (let i = 0; i < enemiesThisBatch; i++) {
+            let pos;
+            let attempts = 0;
+            do {
+                pos = getRandomEdgePosition();
+                attempts++;
+                if (attempts > 20) break;
+            } while (enemies.some(e => {
+                const rect = e.getBoundingClientRect();
+                return !(
+                    pos.x + 60 < rect.left ||
+                    pos.x > rect.right ||
+                    pos.y + 60 < rect.top ||
+                    pos.y > rect.bottom
+                );
+            }));
+
+            // Enemy container
             const enemy = document.createElement("div");
             enemy.classList.add("enemy");
             enemy.style.position = "absolute";
+            enemy.style.left = `${pos.x}px`;
+            enemy.style.top = `${pos.y}px`;
 
-            // Enemy body image
+            // Enemy body
             const randomBody = enemyBodies[Math.floor(Math.random() * enemyBodies.length)];
             const enemyImg = document.createElement("img");
             enemyImg.src = randomBody;
             enemyImg.classList.add("enemy-body");
 
-            // Enemy face image
+            // Enemy face
             const randomFace = faces[Math.floor(Math.random() * faces.length)];
             const faceImg = document.createElement("img");
             faceImg.src = randomFace;
             faceImg.classList.add("enemy-face");
-
-            // Center face and fit within enemy container while keeping aspect ratio
             faceImg.style.position = "absolute";
             faceImg.style.top = "50%";
             faceImg.style.left = "50%";
             faceImg.style.transform = "translate(-50%, -50%)";
-            faceImg.style.maxWidth = "60%";   // fit within enemy width
-            faceImg.style.maxHeight = "60%";  // fit within enemy height
-            faceImg.style.objectFit = "contain"; // keep original aspect ratio
+            faceImg.style.maxWidth = "60%";
+            faceImg.style.maxHeight = "60%";
+            faceImg.style.objectFit = "contain";
 
-            // Append images
+            // Arrow combo container
+            const arrowContainer = document.createElement("div");
+            arrowContainer.classList.add("arrow-container");
+
+            // Determine max and min combo length based on current round
+            const maxComboLength = 5 + (currentRound - 1);
+            const minComboLength = Math.max(1, maxComboLength - 2);
+
+            // Generate weighted random combo length
+            let comboLength;
+            const rand = Math.random();
+            if (rand < 0.4) comboLength = minComboLength;
+            else if (rand > 0.9) comboLength = maxComboLength;
+            else {
+                comboLength = Math.floor(Math.random() * (maxComboLength - minComboLength - 1)) + minComboLength + 1 || minComboLength;
+            }
+
+            // Store this enemy's combo directions
+            const enemyComboDirections = [];
+
+            // Create arrows
+            const arrowFiles = ["arrowUp.png","arrowDown.png","arrowLeft.png","arrowRight.png"];
+            for (let j = 0; j < comboLength; j++) {
+                const randomArrow = arrowFiles[Math.floor(Math.random() * arrowFiles.length)];
+
+                // Map file to cardinal direction
+                let direction;
+                if (randomArrow.includes("Up")) direction = "Up";
+                else if (randomArrow.includes("Down")) direction = "Down";
+                else if (randomArrow.includes("Left")) direction = "Left";
+                else if (randomArrow.includes("Right")) direction = "Right";
+
+                enemyComboDirections.push(direction);
+
+                // Create arrow image
+                const arrow = document.createElement("img");
+                arrow.src = `arrowAssets/${randomArrow}`;
+                arrow.classList.add("enemy-arrow");
+
+                if (direction === "Up") arrow.classList.add("arrow-up");
+                else if (direction === "Down") arrow.classList.add("arrow-down");
+                else if (direction === "Left") arrow.classList.add("arrow-left");
+                else if (direction === "Right") arrow.classList.add("arrow-right");
+
+                arrowContainer.appendChild(arrow);
+            }
+
+            // Save enemy combo to global array
+            enemyCombos.push({
+                enemyElement: enemy,
+                combo: enemyComboDirections
+            });
+
+            // Position arrow container above enemy
+            arrowContainer.style.position = "absolute";
+            arrowContainer.style.bottom = "calc(100% + 10px)";
+            arrowContainer.style.left = "50%";
+            arrowContainer.style.transform = "translateX(-50%)";
+            arrowContainer.style.display = "flex";
+            arrowContainer.style.gap = "3px";
+
+            // Assemble enemy
             enemy.appendChild(enemyImg);
             enemy.appendChild(faceImg);
-
-            // Random spawn position
-            const pos = getRandomEdgePosition();
-            enemy.style.left = `${pos.x}px`;
-            enemy.style.top = `${pos.y}px`;
+            enemy.appendChild(arrowContainer);
 
             document.body.appendChild(enemy);
             enemies.push(enemy);
         }
 
         spawnedCount += enemiesThisBatch;
-
-        if (spawnedCount >= enemiesToSpawn) {
-            clearInterval(spawnInterval);
-        }
+        if (spawnedCount >= enemiesToSpawn) clearInterval(spawnInterval);
     }, spawnIntervalTime);
 
     return enemies;
@@ -266,9 +343,8 @@ function spawnEnemiesForWave(round, wave) {
 spawnEnemiesForWave(currentRound, currentWave);
 
 // Movement speed of enemies (pixels per frame)
-const enemySpeed = 1;
+const enemySpeed = 0.7;
 
-// Function to move all enemies toward the player
 function moveEnemiesTowardPlayer() {
     const enemies = document.querySelectorAll(".enemy");
 
@@ -276,25 +352,51 @@ function moveEnemiesTowardPlayer() {
     const playerX = playerRect.left + playerRect.width / 2;
     const playerY = playerRect.top + playerRect.height / 2;
 
-    enemies.forEach(enemy => {
+    enemies.forEach((enemy, index) => {
         const enemyRect = enemy.getBoundingClientRect();
         let enemyX = enemyRect.left + enemyRect.width / 2;
         let enemyY = enemyRect.top + enemyRect.height / 2;
 
-        // Compute vector toward player
+        // Vector toward player
         let dx = playerX - enemyX;
         let dy = playerY - enemyY;
 
-        // Normalize vector
+        // Normalize
         const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance > 0) { // avoid division by zero
+        if (distance > 0) {
             dx /= distance;
             dy /= distance;
-
-            // Move enemy
-            enemy.style.left = (enemy.offsetLeft + dx * enemySpeed) + "px";
-            enemy.style.top = (enemy.offsetTop + dy * enemySpeed) + "px";
         }
+
+        // Avoid overlapping other enemies
+        enemies.forEach((other, otherIndex) => {
+            if (index === otherIndex) return; // skip self
+            const otherRect = other.getBoundingClientRect();
+            const otherX = otherRect.left + otherRect.width / 2;
+            const otherY = otherRect.top + otherRect.height / 2;
+
+            const distX = enemyX - otherX;
+            const distY = enemyY - otherY;
+            const dist = Math.sqrt(distX * distX + distY * distY);
+
+            // If too close, apply small repelling force
+            const minDist = 60; // minimum distance between enemies
+            if (dist < minDist && dist > 0) {
+                dx += distX / dist * 0.5; // repel slightly
+                dy += distY / dist * 0.5;
+            }
+        });
+
+        // Normalize again after applying repulsion
+        const finalDist = Math.sqrt(dx * dx + dy * dy);
+        if (finalDist > 0) {
+            dx /= finalDist;
+            dy /= finalDist;
+        }
+
+        // Move enemy
+        enemy.style.left = (enemy.offsetLeft + dx * enemySpeed) + "px";
+        enemy.style.top = (enemy.offsetTop + dy * enemySpeed) + "px";
     });
 
     requestAnimationFrame(moveEnemiesTowardPlayer);
@@ -426,7 +528,155 @@ checkEnemyCollisions();
 
 const pauseButton = document.getElementById("pause-button");
 
+// Pause button
 pauseButton.addEventListener("click", () => {
     console.log("Pause button clicked!");
     // Future: toggle game pause here
+});
+
+// Menu button
+const menuButton = document.getElementById("menu-button");
+menuButton.addEventListener("click", () => {
+    console.log("Menu button clicked!");
+    // Future: open menu overlay
+});
+
+// Grab player arrow container
+const playerArrowContainer = document.getElementById("player-arrow-container");
+
+// Map keys to arrow PNGs
+const arrowKeyMap = {
+    "arrowup": "arrowAssets/arrowUp.png",
+    "arrowdown": "arrowAssets/arrowDown.png",
+    "arrowleft": "arrowAssets/arrowLeft.png",
+    "arrowright": "arrowAssets/arrowRight.png"
+};
+
+// Track which keys are currently pressed
+const keysPressedArrow = {};
+
+// Listen for keydown
+document.addEventListener("keydown", (e) => {
+    const key = e.key.toLowerCase();
+
+    // Only act if key wasn't already pressed
+    if (!keysPressedArrow[key]) {
+        keysPressedArrow[key] = true;
+
+        // Handle arrow key input
+        if (arrowKeyMap[key]) {
+            const arrowImg = document.createElement("img");
+            arrowImg.src = arrowKeyMap[key];
+            arrowImg.classList.add("player-arrow");
+
+            // Add class for colored background
+            if (key === "arrowup") arrowImg.classList.add("arrow-up");
+            else if (key === "arrowdown") arrowImg.classList.add("arrow-down");
+            else if (key === "arrowleft") arrowImg.classList.add("arrow-left");
+            else if (key === "arrowright") arrowImg.classList.add("arrow-right");
+
+            playerArrowContainer.appendChild(arrowImg);
+
+            // Optional: limit max combo length
+            const maxComboLength = 10;
+            if (playerArrowContainer.children.length > maxComboLength) {
+                playerArrowContainer.removeChild(playerArrowContainer.children[0]);
+            }
+        }
+
+        // Backspace → remove last arrow
+        else if (key === "backspace") {
+            if (playerArrowContainer.lastChild) {
+                playerArrowContainer.removeChild(playerArrowContainer.lastChild);
+            }
+            e.preventDefault();
+        }
+
+        // Enter → clear all arrows
+        else if (key === "enter") {
+            while (playerArrowContainer.firstChild) {
+                playerArrowContainer.removeChild(playerArrowContainer.firstChild);
+            }
+            e.preventDefault();
+        }
+    }
+});
+
+// Listen for keyup to reset key state
+document.addEventListener("keyup", (e) => {
+    const key = e.key.toLowerCase();
+    keysPressedArrow[key] = false;
+});
+
+// ------------------------
+// PLAYER ARROW STORAGE
+// ------------------------
+
+// Player arrow combo will also be stored in an array of directions
+let playerComboDirections = [];
+
+// Update keydown for arrow inputs
+document.addEventListener("keydown", (e) => {
+    const key = e.key.toLowerCase();
+
+    if (!keysPressedArrow[key]) {
+        keysPressedArrow[key] = true;
+
+        // Arrow keys
+        if (arrowKeyMap[key]) {
+            const arrowImg = document.createElement("img");
+            arrowImg.src = arrowKeyMap[key];
+            arrowImg.classList.add("player-arrow");
+
+            // Add color classes
+            if (key === "arrowup") {
+                arrowImg.classList.add("arrow-up");
+                playerComboDirections.push("Up");
+            } else if (key === "arrowdown") {
+                arrowImg.classList.add("arrow-down");
+                playerComboDirections.push("Down");
+            } else if (key === "arrowleft") {
+                arrowImg.classList.add("arrow-left");
+                playerComboDirections.push("Left");
+            } else if (key === "arrowright") {
+                arrowImg.classList.add("arrow-right");
+                playerComboDirections.push("Right");
+            }
+
+            playerArrowContainer.appendChild(arrowImg);
+
+            // Limit combo length
+            const maxComboLength = 10;
+            if (playerArrowContainer.children.length > maxComboLength) {
+                playerArrowContainer.removeChild(playerArrowContainer.children[0]);
+                playerComboDirections.shift(); // remove first direction
+            }
+        }
+
+        // Backspace → remove last arrow
+        else if (key === "backspace") {
+            if (playerArrowContainer.lastChild) {
+                playerArrowContainer.removeChild(playerArrowContainer.lastChild);
+                playerComboDirections.pop();
+            }
+            e.preventDefault();
+        }
+
+        // Enter → store current combo list
+        else if (key === "enter") {
+            console.log("Player entered combo:", playerComboDirections);
+            // For now, just logs; later you can check against enemyCombos
+            while (playerArrowContainer.firstChild) {
+                playerArrowContainer.removeChild(playerArrowContainer.firstChild);
+            }
+            playerComboDirections = [];
+            e.preventDefault();
+        }
+    }
+});
+
+// Keyup resets
+document.addEventListener("keyup", (e) => {
+    const key = e.key.toLowerCase();
+    keysPressedArrow[key] = false;
 });

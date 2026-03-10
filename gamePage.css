@@ -14,6 +14,13 @@ body {
     z-index: 1000;      /* above everything else */
 }
 
+/* Menu button styling */
+#menu-button {
+    width: 60px;       /* match pause button */
+    height: 60px;
+    cursor: pointer;
+}
+
 /* Pause button styling */
 #pause-button {
     width: 60px;        /* adjust size as needed */
@@ -112,4 +119,77 @@ body {
 .enemy-body {
     width: 60px;
     height: auto; /* keep ratio */
+}
+
+/* Arrow combo container */
+.arrow-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3px 4px; /* slightly smaller padding */
+    background-color: rgba(255, 255, 255, 0.08); /* more subtle background */
+}
+
+/* General arrow styling */
+.enemy-arrow {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;    /* optional rounded corners */
+}
+
+/* Backgrounds by cardinal direction */
+.enemy-arrow.arrow-up {
+    background-color: rgba(0, 123, 255, 0.4); /* blue */
+}
+
+.enemy-arrow.arrow-down {
+    background-color: rgba(220, 53, 69, 0.4); /* red */
+}
+
+.enemy-arrow.arrow-left {
+    background-color: rgba(40, 167, 69, 0.4); /* green */
+}
+
+.enemy-arrow.arrow-right {
+    background-color: rgba(255, 193, 7, 0.4); /* yellow */
+}
+
+/* Player arrow combo container */
+#player-arrow-container {
+    position: fixed;
+    bottom: 24px;           /* margin from bottom */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+    padding: 4px 6px;
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;    /* pill shape */
+    min-height: 40px;        /* ensures container height */
+    align-items: center;
+}
+
+/* Individual player arrows */
+.player-arrow {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;   /* rounded corners */
+    padding: 2px;          /* optional padding inside arrow */
+}
+
+/* Backgrounds based on arrow type */
+.player-arrow.arrow-up {
+    background-color: rgba(0, 123, 255, 0.4); /* blue */
+}
+
+.player-arrow.arrow-down {
+    background-color: rgba(220, 53, 69, 0.4); /* red */
+}
+
+.player-arrow.arrow-left {
+    background-color: rgba(40, 167, 69, 0.4); /* green */
+}
+
+.player-arrow.arrow-right {
+    background-color: rgba(255, 193, 7, 0.4); /* yellow */
 }
