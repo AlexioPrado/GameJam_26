@@ -4,6 +4,22 @@ body {
     overflow: hidden;
 }
 
+/* UI container for pause button or other icons */
+#ui-container {
+    position: absolute;
+    top: 24px;          /* same margin as body */
+    right: 24px;        /* align to top-right */
+    display: flex;       /* horizontal layout */
+    gap: 6px;           /* space between icons */
+    z-index: 1000;      /* above everything else */
+}
+
+/* Pause button styling */
+#pause-button {
+    width: 60px;        /* adjust size as needed */
+    height: 60px;
+    cursor: pointer;
+}
 /* Heart container */
 #hearts {
     position: absolute;
@@ -11,6 +27,7 @@ body {
     left: 24px;
     display: flex;
     gap: 6px;
+    z-index: 1000; /* highest layer */
 }
 
 /* Individual heart */
@@ -22,24 +39,77 @@ body {
 /* Player container */
 #player {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 300px;
+    left: 300px;
 }
 
-/* Player base image */
+/* Player body container */
 .player-body {
-    width: 120px;
+    position: relative;
+    width: 60px;   /* half sized player */
+}
+
+/* Player image */
+.player-image {
+    width: 100%;
     height: auto;
     display: block;
 }
 
-/* Face overlay */
+/* Face centered inside body container */
 .player-face {
     position: absolute;
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: auto;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+/* Progress bar container */
+#progress-container {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    height: 24px;
+    background-color: #444;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    z-index: 1000; /* highest layer */
+}
+
+/* Progress bar fill */
+#progress-bar {
+    height: 100%;
+    width: 25%; /* wave 1 starts with 25% */
+    background-color: #4caf50;
+    transition: width 0.3s ease;
+}
+
+/* Round & Wave counter container */
+#round-wave {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-family: sans-serif;
+    font-size: 18px;
+    text-align: center;
+    z-index: 1000; /* highest layer */
+}
+
+/* Enemy container */
+.enemy {
+    position: absolute;
+}
+
+/* Enemy image size */
+.enemy-body {
+    width: 60px;
+    height: auto; /* keep ratio */
 }
