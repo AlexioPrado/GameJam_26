@@ -102,53 +102,15 @@ const roundWave = document.getElementById("round-wave");
 // Initial values
 let currentRound = 1;
 let currentWave = 1;
-const maxWavesPerRound = 4; // 3 normal waves + 1 final wave
+const maxWavesPerRound = 3; // 3 normal waves per round
 
 // Function to update progress and counters
 function updateProgressBar(round, wave) {
-    // Display "Final Battle" if wave 4
-    if (wave === maxWavesPerRound) {
-        roundWave.innerHTML = `Round: ${round} | Final Battle`;
-        
-        // Show boss name below for final battle
-        const bossName = getBossName(round);
-        if (document.getElementById("boss-name")) {
-            document.getElementById("boss-name").innerHTML = `Boss: ${bossName}`;
-        } else {
-            const bossNameElement = document.createElement("div");
-            bossNameElement.id = "boss-name";
-            bossNameElement.innerHTML = `Boss: ${bossName}`;
-            bossNameElement.style.fontSize = "18px";
-            bossNameElement.style.marginTop = "5px";
-            roundWave.parentNode.appendChild(bossNameElement);
-        }
-    } else {
-        roundWave.innerHTML = `Round: ${round} | Wave: ${wave}`;
-        
-        // Hide boss name for regular waves
-        const bossNameElement = document.getElementById("boss-name");
-        if (bossNameElement) {
-            bossNameElement.remove();
-        }
-    }
+    roundWave.innerHTML = `Round: ${round} | Wave: ${wave}`;
 
-    // Progress fills proportionally (1/4 per wave)
+    // Progress fills proportionally (1/3 per wave)
     const progress = (wave / maxWavesPerRound) * 100;
     progressBar.style.width = `${progress}%`;
-}
-
-// Get boss name based on round
-function getBossName(round) {
-    switch(round) {
-        case 1: return "Chiikawa, Hachiware, Usagi";
-        case 2: return "Humbah";
-        case 3: return "Zumbah";
-        case 4: return "Jumbah";
-        case 5: return "Jingbah";
-        case 6: return "Zing Zing Zingbah";
-        case 7: return "Phil Collins";
-        default: return "Unknown Boss";
-    }
 }
 
 // Initialize progress bar at wave 1
@@ -226,7 +188,7 @@ function calculateEnemies(round, wave) {
         // Subsequent waves increment by +2 from wave 1
         enemiesForThisWave = wave1Enemies + 2 * (wave - 1);
     } else {
-        enemiesForThisWave = 5; // default for wave 4 or others
+        enemiesForThisWave = wave1Enemies + 4; // default for waves beyond 3
     }
 
     return enemiesForThisWave;
@@ -257,132 +219,127 @@ function spawnEnemiesForWave(round, wave) {
         const enemiesThisBatch = Math.min(2, enemiesToSpawn - spawnedCount);
         
         for (let i = 0; i < enemiesThisBatch; i++) {
-            // Check if this is wave 4 (final battle) - spawn final bosses
-            if (wave === maxWavesPerRound) {
-                spawnFinalBoss(round, enemies);
-            } else {
-                // Regular enemy spawning
-                const enemy = document.createElement("div");
-                enemy.classList.add("enemy");
+            // Regular enemy spawning
+            const enemy = document.createElement("div");
+            enemy.classList.add("enemy");
 
-                // Consistent size - same as player body (60px)
-                const size = 60;
-                enemy.style.width = size + "px";
-                enemy.style.height = size + "px";
-                enemy.style.position = "absolute";
+            // Consistent size - same as player body (60px)
+            const size = 60;
+            enemy.style.width = size + "px";
+            enemy.style.height = size + "px";
+            enemy.style.position = "absolute";
 
-                // Random spawn position (top, left, right, bottom) - using full page bounds
-                const side = Math.floor(Math.random() * 4);
-                const windowWidth = window.innerWidth;
-                const windowHeight = window.innerHeight;
-                
-                switch(side) {
-                    case 0: // top
-                        enemy.style.left = Math.random() * (windowWidth - size) + "px";
-                        enemy.style.top = "-100px";
-                        break;
-                    case 1: // right
-                        enemy.style.left = windowWidth + "px";
-                        enemy.style.top = Math.random() * (windowHeight - size) + "px";
-                        break;
-                    case 2: // bottom
-                        enemy.style.left = Math.random() * (windowWidth - size) + "px";
-                        enemy.style.top = windowHeight + "px";
-                        break;
-                    case 3: // left
-                        enemy.style.left = "-100px";
-                        enemy.style.top = Math.random() * (windowHeight - size) + "px";
-                        break;
-                }
-
-                // Random enemy body from enemyBodies list
-                const enemyImg = document.createElement("img");
-                const randomBody = enemyBodies[Math.floor(Math.random() * enemyBodies.length)];
-                enemyImg.src = randomBody;
-                enemyImg.style.width = "100%";
-                enemyImg.style.height = "100%";
-                enemyImg.style.objectFit = "contain";
-
-                // Random face image
-                const faceImg = document.createElement("img");
-                const randomFace = faces[Math.floor(Math.random() * faces.length)];
-                faceImg.src = randomFace;
-                faceImg.style.width = "40%";
-                faceImg.style.height = "40%";
-                faceImg.style.position = "absolute";
-                faceImg.style.top = "30%";
-                faceImg.style.left = "30%";
-                faceImg.style.objectFit = "contain";
-
-                // Arrow combo container
-                const arrowContainer = document.createElement("div");
-                arrowContainer.classList.add("arrow-container");
-
-                // Determine max and min combo length based on current round
-                const maxComboLength = 5 + (currentRound - 1);
-                const minComboLength = Math.max(1, maxComboLength - 2);
-
-                // Generate weighted random combo length
-                let comboLength;
-                const rand = Math.random();
-                if (rand < 0.4) comboLength = minComboLength;
-                else if (rand > 0.9) comboLength = maxComboLength;
-                else {
-                    comboLength = Math.floor(Math.random() * (maxComboLength - minComboLength - 1)) + minComboLength + 1 || minComboLength;
-                }
-
-                // Store this enemy's combo directions
-                const enemyComboDirections = [];
-
-                // Create arrows
-                const arrowFiles = ["arrowUp.png","arrowDown.png","arrowLeft.png","arrowRight.png"];
-                for (let j = 0; j < comboLength; j++) {
-                    const randomArrow = arrowFiles[Math.floor(Math.random() * arrowFiles.length)];
-
-                    // Map file to cardinal direction
-                    let direction;
-                    if (randomArrow.includes("Up")) direction = "Up";
-                    else if (randomArrow.includes("Down")) direction = "Down";
-                    else if (randomArrow.includes("Left")) direction = "Left";
-                    else if (randomArrow.includes("Right")) direction = "Right";
-
-                    enemyComboDirections.push(direction);
-
-                    // Create arrow image
-                    const arrow = document.createElement("img");
-                    arrow.src = `arrowAssets/${randomArrow}`;
-                    arrow.classList.add("enemy-arrow");
-
-                    if (direction === "Up") arrow.classList.add("arrow-up");
-                    else if (direction === "Down") arrow.classList.add("arrow-down");
-                    else if (direction === "Left") arrow.classList.add("arrow-left");
-                    else if (direction === "Right") arrow.classList.add("arrow-right");
-
-                    arrowContainer.appendChild(arrow);
-                }
-
-                // Save enemy combo to global array
-                enemyCombos.push({
-                    enemyElement: enemy,
-                    combo: enemyComboDirections
-                });
-
-                // Position arrow container above enemy
-                arrowContainer.style.position = "absolute";
-                arrowContainer.style.bottom = "calc(100% + 10px)";
-                arrowContainer.style.left = "50%";
-                arrowContainer.style.transform = "translateX(-50%)";
-                arrowContainer.style.display = "flex";
-                arrowContainer.style.gap = "3px";
-
-                // Assemble enemy
-                enemy.appendChild(enemyImg);
-                enemy.appendChild(faceImg);
-                enemy.appendChild(arrowContainer);
-
-                document.body.appendChild(enemy);
-                enemies.push(enemy);
+            // Random spawn position (top, left, right, bottom) - using full page bounds
+            const side = Math.floor(Math.random() * 4);
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            switch(side) {
+                case 0: // top
+                    enemy.style.left = Math.random() * (windowWidth - size) + "px";
+                    enemy.style.top = "-100px";
+                    break;
+                case 1: // right
+                    enemy.style.left = windowWidth + "px";
+                    enemy.style.top = Math.random() * (windowHeight - size) + "px";
+                    break;
+                case 2: // bottom
+                    enemy.style.left = Math.random() * (windowWidth - size) + "px";
+                    enemy.style.top = windowHeight + "px";
+                    break;
+                case 3: // left
+                    enemy.style.left = "-100px";
+                    enemy.style.top = Math.random() * (windowHeight - size) + "px";
+                    break;
             }
+
+            // Random enemy body from enemyBodies list
+            const enemyImg = document.createElement("img");
+            const randomBody = enemyBodies[Math.floor(Math.random() * enemyBodies.length)];
+            enemyImg.src = randomBody;
+            enemyImg.style.width = "100%";
+            enemyImg.style.height = "100%";
+            enemyImg.style.objectFit = "contain";
+
+            // Random face image
+            const faceImg = document.createElement("img");
+            const randomFace = faces[Math.floor(Math.random() * faces.length)];
+            faceImg.src = randomFace;
+            faceImg.style.width = "40%";
+            faceImg.style.height = "40%";
+            faceImg.style.position = "absolute";
+            faceImg.style.top = "30%";
+            faceImg.style.left = "30%";
+            faceImg.style.objectFit = "contain";
+
+            // Arrow combo container
+            const arrowContainer = document.createElement("div");
+            arrowContainer.classList.add("arrow-container");
+
+            // Determine max and min combo length based on current round
+            const maxComboLength = 5 + Math.floor((currentRound - 1) / 2);
+            const minComboLength = Math.max(1, maxComboLength - 2);
+
+            // Generate weighted random combo length
+            let comboLength;
+            const rand = Math.random();
+            if (rand < 0.4) comboLength = minComboLength;
+            else if (rand > 0.9) comboLength = maxComboLength;
+            else {
+                comboLength = Math.floor(Math.random() * (maxComboLength - minComboLength - 1)) + minComboLength + 1 || minComboLength;
+            }
+
+            // Store this enemy's combo directions
+            const enemyComboDirections = [];
+
+            // Create arrows
+            const arrowFiles = ["arrowUp.png","arrowDown.png","arrowLeft.png","arrowRight.png"];
+            for (let j = 0; j < comboLength; j++) {
+                const randomArrow = arrowFiles[Math.floor(Math.random() * arrowFiles.length)];
+
+                // Map file to cardinal direction
+                let direction;
+                if (randomArrow.includes("Up")) direction = "Up";
+                else if (randomArrow.includes("Down")) direction = "Down";
+                else if (randomArrow.includes("Left")) direction = "Left";
+                else if (randomArrow.includes("Right")) direction = "Right";
+
+                enemyComboDirections.push(direction);
+
+                // Create arrow image
+                const arrow = document.createElement("img");
+                arrow.src = `arrowAssets/${randomArrow}`;
+                arrow.classList.add("enemy-arrow");
+
+                if (direction === "Up") arrow.classList.add("arrow-up");
+                else if (direction === "Down") arrow.classList.add("arrow-down");
+                else if (direction === "Left") arrow.classList.add("arrow-left");
+                else if (direction === "Right") arrow.classList.add("arrow-right");
+
+                arrowContainer.appendChild(arrow);
+            }
+
+            // Save enemy combo to global array
+            enemyCombos.push({
+                enemyElement: enemy,
+                combo: enemyComboDirections
+            });
+
+            // Position arrow container above enemy
+            arrowContainer.style.position = "absolute";
+            arrowContainer.style.bottom = "calc(100% + 10px)";
+            arrowContainer.style.left = "50%";
+            arrowContainer.style.transform = "translateX(-50%)";
+            arrowContainer.style.display = "flex";
+            arrowContainer.style.gap = "3px";
+
+            // Assemble enemy
+            enemy.appendChild(enemyImg);
+            enemy.appendChild(faceImg);
+            enemy.appendChild(arrowContainer);
+
+            document.body.appendChild(enemy);
+            enemies.push(enemy);
         }
 
         spawnedCount += enemiesThisBatch;
@@ -390,127 +347,6 @@ function spawnEnemiesForWave(round, wave) {
     }, spawnIntervalTime);
 
     return enemies;
-}
-
-// Spawn final boss for wave 4
-function spawnFinalBoss(round, enemies) {
-    const boss = document.createElement("div");
-    boss.classList.add("enemy", "final-boss");
-    
-    // Larger size for final boss
-    const size = 100;
-    boss.style.width = size + "px";
-    boss.style.height = size + "px";
-    boss.style.position = "absolute";
-    
-    // Center spawn for dramatic entrance
-    const gameBounds = document.body.getBoundingClientRect();
-    boss.style.left = (gameBounds.width / 2 - size / 2) + "px";
-    boss.style.top = "-150px";
-    
-    // Get boss image based on round
-    const bossImg = document.createElement("img");
-    bossImg.src = `enemyAssets/finalBoss/R${round}/Chiikawa.png`; // Default to Chiikawa, could randomize
-    bossImg.style.width = "100%";
-    bossImg.style.height = "100%";
-    bossImg.style.objectFit = "contain";
-    
-    // Arrow combo container (longer combos for bosses)
-    const arrowContainer = document.createElement("div");
-    arrowContainer.classList.add("arrow-container");
-    
-    // Boss combos are longer and more complex
-    const comboLength = 8; // Fixed combo length for all bosses
-    const enemyComboDirections = [];
-    
-    const arrowFiles = ["arrowUp.png","arrowDown.png","arrowLeft.png","arrowRight.png"];
-    for (let j = 0; j < comboLength; j++) {
-        const randomArrow = arrowFiles[Math.floor(Math.random() * arrowFiles.length)];
-        
-        let direction;
-        if (randomArrow.includes("Up")) direction = "Up";
-        else if (randomArrow.includes("Down")) direction = "Down";
-        else if (randomArrow.includes("Left")) direction = "Left";
-        else if (randomArrow.includes("Right")) direction = "Right";
-        
-        enemyComboDirections.push(direction);
-        
-        const arrow = document.createElement("img");
-        arrow.src = `arrowAssets/${randomArrow}`;
-        arrow.classList.add("enemy-arrow");
-        
-        if (direction === "Up") arrow.classList.add("arrow-up");
-        else if (direction === "Down") arrow.classList.add("arrow-down");
-        else if (direction === "Left") arrow.classList.add("arrow-left");
-        else if (direction === "Right") arrow.classList.add("arrow-right");
-        
-        arrowContainer.appendChild(arrow);
-    }
-    
-    // Save boss combo to global array
-    enemyCombos.push({
-        enemyElement: boss,
-        combo: enemyComboDirections,
-        isBoss: true,
-        bossClass: `FinalBoss${round}`
-    });
-    
-    // Position arrow container
-    arrowContainer.style.position = "absolute";
-    arrowContainer.style.bottom = "calc(100% + 15px)";
-    arrowContainer.style.left = "50%";
-    arrowContainer.style.transform = "translateX(-50%)";
-    arrowContainer.style.display = "flex";
-    arrowContainer.style.gap = "3px";
-    
-    // Assemble boss
-    boss.appendChild(bossImg);
-    boss.appendChild(arrowContainer);
-    
-    document.body.appendChild(boss);
-    enemies.push(boss);
-    
-    // Create boss instance with special abilities
-    const BossClass = getBossClass(round);
-    if (BossClass) {
-        const bossInstance = new BossClass(boss, enemyComboDirections);
-        boss.bossInstance = bossInstance;
-        
-        // Start boss behavior loop
-        startBossBehavior(bossInstance);
-    }
-    
-    // Dramatic entrance animation
-    setTimeout(() => {
-        boss.style.transition = "top 1s ease-out";
-        boss.style.top = "100px";
-    }, 100);
-}
-
-// Get boss class based on round
-function getBossClass(round) {
-    switch(round) {
-        case 1: return FinalBoss1;
-        case 2: return FinalBoss2;
-        case 3: return FinalBoss3;
-        case 4: return FinalBoss4;
-        case 5: return FinalBoss5;
-        case 6: return FinalBoss6;
-        case 7: return FinalBoss7;
-        default: return FinalBoss1;
-    }
-}
-
-// Start boss behavior loop
-function startBossBehavior(bossInstance) {
-    function bossLoop() {
-        if (bossInstance.enemyElement.parentNode) {
-            bossInstance.movementPattern();
-            bossInstance.specialAbility();
-            requestAnimationFrame(bossLoop);
-        }
-    }
-    bossLoop();
 }
 
 // Example usage
@@ -559,20 +395,15 @@ moveEnemiesTowardPlayer();
 
 // Function to update progress bar and counters dynamically
 function updateProgress() {
-    // Display "Final Battle" if wave 4
-    if (currentWave === maxWavesPerRound) {
-        roundWave.innerHTML = `Round: ${currentRound} | Final Battle`;
-    } else {
-        roundWave.innerHTML = `Round: ${currentRound} | Wave: ${currentWave}`;
-    }
+    roundWave.innerHTML = `Round: ${currentRound} | Wave: ${currentWave}`;
 
-    // Progress fills proportionally
+    // Progress fills proportionally (1/3 per wave)
     const progress = (currentWave / maxWavesPerRound) * 100;
     progressBar.style.width = `${progress}%`;
 }
 
 // Initialize counters and progress bar
-updateProgress(currentRound, currentWave);
+updateProgress();
 
 // ------------------------
 // ROUND AND WAVE MANAGEMENT FUNCTIONS (do not increment yet)
@@ -583,7 +414,7 @@ function nextWave() {
     if (currentWave < maxWavesPerRound) {
         currentWave++;
     } else {
-        // If wave 4 reached, next wave would reset and round could increment
+        // If wave 3 reached, next wave would reset and round could increment
         currentWave = 1;
         // currentRound++; // Do not increment yet
     }
@@ -622,7 +453,7 @@ function isColliding(el1, el2) {
 function checkWaveCompletion() {
     const enemies = document.querySelectorAll(".enemy");
     
-    // If no enemies left and we're not in final battle
+    // If no enemies left and we're not at the max wave
     if (enemies.length === 0 && currentWave < maxWavesPerRound) {
         // Advance to next wave
         nextWave();
@@ -630,13 +461,13 @@ function checkWaveCompletion() {
         // Spawn enemies for the new wave
         spawnEnemiesForWave(currentRound, currentWave);
     }
-    // If no enemies left and we're in final battle (wave 4)
+    // If no enemies left and we're at the max wave (wave 3)
     else if (enemies.length === 0 && currentWave === maxWavesPerRound) {
         // Advance to next round
         nextRound();
         
         // Spawn enemies for the new round's first wave
-        spawnEnemiesForWave(currentRound, 1); // Change currentWave to 1
+        spawnEnemiesForWave(currentRound, 1);
     }
 }
 
@@ -725,6 +556,14 @@ const arrowKeyMap = {
     "arrowright": "arrowAssets/arrowRight.png"
 };
 
+// Map arrow keys to audio files
+const arrowAudioMap = {
+    "arrowup": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-01.wav",
+    "arrowdown": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-02.wav",
+    "arrowleft": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-03.wav",
+    "arrowright": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-04.wav"
+};
+
 // Track which keys are currently pressed
 const keysPressedArrow = {};
 
@@ -750,6 +589,11 @@ document.addEventListener("keydown", (e) => {
 
         // Handle arrow key input
         if (arrowKeyMap[key]) {
+            // Play arrow audio
+            const arrowAudio = new Audio(arrowAudioMap[key]);
+            arrowAudio.volume = 0.3; // Set volume to 30%
+            arrowAudio.play().catch(e => console.log("Audio play failed:", e));
+
             const arrowImg = document.createElement("img");
             arrowImg.src = arrowKeyMap[key];
             arrowImg.classList.add("player-arrow");
@@ -802,41 +646,32 @@ document.addEventListener("keydown", (e) => {
                     }
                 });
                 
-                // Handle matched enemies
+                // Play appropriate audio based on match result
                 if (matchedEnemies.length > 0) {
+                    // Success - play jingle_NES09.ogg
+                    const successAudio = new Audio("audioAssets/jingles_NES09.ogg");
+                    successAudio.volume = 0.4;
+                    successAudio.play().catch(e => console.log("Success audio play failed:", e));
+                    
+                    // Handle matched enemies
                     matchedEnemies.forEach(matched => {
-                        // Check if this is a boss
-                        const enemyCombo = enemyCombos.find(ec => ec.enemyElement === matched.enemyElement);
+                        // Regular enemy - remove immediately
+                        matched.enemyElement.remove();
                         
-                        if (enemyCombo && enemyCombo.isBoss && matched.enemyElement.bossInstance) {
-                            // Handle boss hit
-                            const bossDefeated = matched.enemyElement.bossInstance.onComboHit();
-                            
-                            if (bossDefeated) {
-                                // Boss defeated - remove from game
-                                matched.enemyElement.remove();
-                                
-                                // Remove from enemyCombos array
-                                const index = enemyCombos.findIndex(ec => ec.enemyElement === matched.enemyElement);
-                                if (index > -1) {
-                                    enemyCombos.splice(index, 1);
-                                }
-                            }
-                            // If boss not defeated, don't remove - it survives with reduced health
-                        } else {
-                            // Regular enemy - remove immediately
-                            matched.enemyElement.remove();
-                            
-                            // Remove from enemyCombos array
-                            const index = enemyCombos.findIndex(ec => ec.enemyElement === matched.enemyElement);
-                            if (index > -1) {
-                                enemyCombos.splice(index, 1);
-                            }
+                        // Remove from enemyCombos array
+                        const index = enemyCombos.findIndex(ec => ec.enemyElement === matched.enemyElement);
+                        if (index > -1) {
+                            enemyCombos.splice(index, 1);
                         }
                     });
                     
                     // Check if wave is complete after defeating enemies
                     checkWaveCompletion();
+                } else {
+                    // Failure - play jingles_NES10.ogg
+                    const failureAudio = new Audio("audioAssets/jingles_NES10.ogg");
+                    failureAudio.volume = 0.4;
+                    failureAudio.play().catch(e => console.log("Failure audio play failed:", e));
                 }
             }
             
