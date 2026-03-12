@@ -81,6 +81,147 @@
         <button class="confirm-button" id="round-confirm-btn">Confirm</button>
     </div>
 
+    <!-- Pause Overlay (Hidden by default) -->
+    <div id="pause-overlay" class="overlay">
+        <div class="pause-content">
+            <div class="pause-text">Paused</div>
+            <div class="pause-buttons">
+                <button class="pause-button-item" id="continue-btn">Continue</button>
+                <button class="pause-button-item" id="card-archive-btn">Card Archive</button>
+                <button class="pause-button-item" id="settings-btn">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Overlay (Hidden by default) -->
+    <div id="settings-overlay" class="overlay">
+        <div class="settings-content">
+            <button class="settings-exit-btn" id="settings-exit-btn">Exit</button>
+            <div class="settings-sidebar">
+                <div class="settings-section-title active" data-section="audio">Audio</div>
+                <div class="settings-section-title" data-section="keybind">Keybind</div>
+                <div class="settings-section-title" data-section="about">About Me</div>
+            </div>
+            <div class="settings-main">
+                <!-- Audio Section -->
+                <div class="settings-section" id="audio-section">
+                    <h2>Audio Settings</h2>
+                    <div class="setting-item">
+                        <label for="music-volume">Music Volume</label>
+                        <input type="range" id="music-volume" min="0" max="100" value="30">
+                        <span id="music-volume-value">30%</span>
+                    </div>
+                    <div class="setting-item">
+                        <label for="sfx-volume">Sound Effects Volume</label>
+                        <input type="range" id="sfx-volume" min="0" max="100" value="40">
+                        <span id="sfx-volume-value">40%</span>
+                    </div>
+                    <div class="setting-item music-selector">
+                        <label>Background Music</label>
+                        <div class="music-selection">
+                            <select id="music-select">
+                                <option value="0">Retro Retro Revolution</option>
+                                <option value="1">Boohbah Adventure</option>
+                                <option value="2">Karim Time</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Keybind Section -->
+                <div class="settings-section hidden" id="keybind-section">
+                    <h2>Keybind Settings</h2>
+                    <div class="keybind-instructions">
+                        <p>Click "Edit" then press the key you want to assign. Press ESC to cancel.</p>
+                    </div>
+                    <div class="keybind-list">
+                        <div class="keybind-item">
+                            <span>Move Up</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="moveUp">W</kbd>
+                                <button class="keybind-edit-btn" data-action="moveUp">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Move Down</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="moveDown">S</kbd>
+                                <button class="keybind-edit-btn" data-action="moveDown">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Move Left</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="moveLeft">A</kbd>
+                                <button class="keybind-edit-btn" data-action="moveLeft">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Move Right</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="moveRight">D</kbd>
+                                <button class="keybind-edit-btn" data-action="moveRight">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Pause Game</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="pause">Escape</kbd>
+                                <button class="keybind-edit-btn" data-action="pause">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Arrow Up</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="arrowUp">ArrowUp</kbd>
+                                <button class="keybind-edit-btn" data-action="arrowUp">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Arrow Down</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="arrowDown">ArrowDown</kbd>
+                                <button class="keybind-edit-btn" data-action="arrowDown">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Arrow Left</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="arrowLeft">ArrowLeft</kbd>
+                                <button class="keybind-edit-btn" data-action="arrowLeft">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Arrow Right</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="arrowRight">ArrowRight</kbd>
+                                <button class="keybind-edit-btn" data-action="arrowRight">Edit</button>
+                            </div>
+                        </div>
+                        <div class="keybind-item">
+                            <span>Submit Combo</span>
+                            <div class="keybind-control">
+                                <kbd class="keybind-key" data-action="submit">Enter</kbd>
+                                <button class="keybind-edit-btn" data-action="submit">Edit</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- About Section -->
+                <div class="settings-section hidden" id="about-section">
+                    <h2>About Me</h2>
+                    <div class="about-content">
+                        <p>Game created by: Marcus Alexio Prado (Windsurf)</p>
+                        <p>Version: 1.6.7</p>
+                        <p>A retro-style arcade game with arrow combo mechanics.</p>
+                        <p>Defeat enemies by matching their arrow patterns!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="gamePage.js"></script>
 </body>
 </html>

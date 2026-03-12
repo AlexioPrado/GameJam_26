@@ -1,3 +1,130 @@
+// Game pause/resume functions
+let isGamePaused = false;
+
+// MUSIC SELECTION SYSTEM
+let currentMusicIndex = 0;
+
+function initializeMusicSelector() {
+    // Load saved music preference
+    const savedMusicIndex = localStorage.getItem('selectedMusicIndex');
+    if (savedMusicIndex !== null) {
+        currentMusicIndex = parseInt(savedMusicIndex);
+        document.getElementById('music-select').value = currentMusicIndex;
+    }
+    
+    // Add event listener for immediate selection
+    const musicSelect = document.getElementById('music-select');
+    if (musicSelect) {
+        musicSelect.addEventListener('change', applyMusicSelection);
+    }
+}
+
+function applyMusicSelection() {
+    const musicSelect = document.getElementById('music-select');
+    const newMusicIndex = parseInt(musicSelect.value);
+    
+    // Apply the new music
+    currentMusicIndex = newMusicIndex;
+    localStorage.setItem('selectedMusicIndex', currentMusicIndex);
+    
+    // Update current background music if playing
+    if (currentBackgroundMusic) {
+        currentBackgroundMusic.pause();
+        currentBackgroundMusic.src = backgroundMusicFiles[currentMusicIndex];
+        currentBackgroundMusic.play().catch(error => {
+            console.log("Background music change failed:", error);
+        });
+    }
+}
+
+// Update playRandomBackgroundMusic to use saved preference
+function playRandomBackgroundMusic() {
+    // Stop current music if playing
+    if (currentBackgroundMusic) {
+        currentBackgroundMusic.pause();
+        currentBackgroundMusic = null;
+    }
+    
+    // Use saved music index or default to first track
+    const savedIndex = localStorage.getItem('selectedMusicIndex');
+    const musicIndex = savedIndex !== null ? parseInt(savedIndex) : 0;
+    const selectedMusic = backgroundMusicFiles[musicIndex];
+    
+    // Create new audio element
+    currentBackgroundMusic = new Audio(selectedMusic);
+    currentBackgroundMusic.loop = true;
+    currentBackgroundMusic.volume = 0.3; // Set volume to 30%
+    
+    // Play the music
+    currentBackgroundMusic.play().catch(error => {
+        console.log("Background music play failed:", error);
+    });
+}
+
+// Initialize music selector when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMusicSelector();
+});
+
+// KEYBIND CUSTOMIZATION SYSTEM
+const defaultKeybinds = {
+    moveUp: 'w',
+    moveDown: 's',
+    moveLeft: 'a',
+    moveRight: 'd',
+    pause: 'escape',
+    arrowUp: 'arrowup',
+    arrowDown: 'arrowdown',
+    arrowLeft: 'arrowleft',
+    arrowRight: 'arrowright',
+    submit: 'enter'
+};
+
+let customKeybinds = { ...defaultKeybinds };
+let editingKeybind = null;
+
+
+
+// BACKGROUND MUSIC SYSTEM
+const backgroundMusicFiles = [
+    "audioAssets/gameBackgroundMusic/2019-12-11_-_Retro_Platforming_-_David_Fesliyan.mp3",
+    "audioAssets/gameBackgroundMusic/2021-08-16_-_8_Bit_Adventure_-_www.FesliyanStudios.com.mp3",
+    "audioAssets/gameBackgroundMusic/2021-08-30_-_Boss_Time_-_www.FesliyanStudios.com.mp3"
+];
+
+let currentBackgroundMusic = null;
+
+function playRandomBackgroundMusic() {
+    // Stop current music if playing
+    if (currentBackgroundMusic) {
+        currentBackgroundMusic.pause();
+        currentBackgroundMusic = null;
+    }
+    
+    // Select random music file
+    const randomIndex = Math.floor(Math.random() * backgroundMusicFiles.length);
+    const selectedMusic = backgroundMusicFiles[randomIndex];
+    
+    // Create new audio element
+    currentBackgroundMusic = new Audio(selectedMusic);
+    currentBackgroundMusic.loop = true;
+    currentBackgroundMusic.volume = 0.3; // Set volume to 30%
+    
+    // Play the music
+    currentBackgroundMusic.play().catch(error => {
+        console.log("Background music play failed:", error);
+    });
+}
+
+// Initialize background music when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for user interaction before playing audio (browser requirement)
+    document.addEventListener('click', function initAudio() {
+        playRandomBackgroundMusic();
+        document.removeEventListener('click', initAudio);
+    }, { once: true });
+});
+
 const heartsContainer = document.createElement("div");
 heartsContainer.id = "hearts";
 
@@ -76,13 +203,19 @@ document.addEventListener("keyup", (e) => {
 
 // update player position continuously
 function updatePlayerPosition() {
+    // Don't update if game is paused
+    if (isGamePaused) {
+        requestAnimationFrame(updatePlayerPosition);
+        return;
+    }
+    
     // vertical movement
-    if (keysPressed["w"]) playerY -= speed;
-    if (keysPressed["s"]) playerY += speed;
+    if (keysPressed[customKeybinds.moveUp]) playerY -= speed;
+    if (keysPressed[customKeybinds.moveDown]) playerY += speed;
 
     // horizontal movement
-    if (keysPressed["a"]) playerX -= speed;
-    if (keysPressed["d"]) playerX += speed;
+    if (keysPressed[customKeybinds.moveLeft]) playerX -= speed;
+    if (keysPressed[customKeybinds.moveRight]) playerX += speed;
 
     // apply new position
     player.style.left = playerX + "px";
@@ -216,6 +349,11 @@ function spawnEnemiesForWave(round, wave) {
     let spawnedCount = 0;
 
     const spawnInterval = setInterval(() => {
+        // Don't spawn enemies if game is paused
+        if (isGamePaused) {
+            return;
+        }
+        
         const enemiesThisBatch = Math.min(2, enemiesToSpawn - spawnedCount);
         
         for (let i = 0; i < enemiesThisBatch; i++) {
@@ -356,6 +494,12 @@ spawnEnemiesForWave(currentRound, currentWave);
 const enemySpeed = 0.7;
 
 function moveEnemiesTowardPlayer() {
+    // Don't move enemies if game is paused
+    if (isGamePaused) {
+        requestAnimationFrame(moveEnemiesTowardPlayer);
+        return;
+    }
+    
     const enemies = document.querySelectorAll(".enemy");
 
     const playerRect = player.getBoundingClientRect();
@@ -538,9 +682,6 @@ function showRoundCompletionCards(onComplete) {
     };
 }
 
-// Game pause/resume functions
-let isGamePaused = false;
-
 function pauseGame() {
     isGamePaused = true;
     // Add visual pause indicator if needed
@@ -577,6 +718,12 @@ function decreaseHeart() {
 
 // Collision detection loop
 function checkEnemyCollisions() {
+    // Don't check collisions if game is paused
+    if (isGamePaused) {
+        requestAnimationFrame(checkEnemyCollisions);
+        return;
+    }
+    
     const enemies = document.querySelectorAll(".enemy");
 
     enemies.forEach(enemy => {
@@ -663,15 +810,26 @@ function arraysEqual(a, b) {
 document.addEventListener("keydown", (e) => {
     const key = e.key.toLowerCase();
 
+    // Check custom keybinds for pause
+    if (key === customKeybinds.pause && document.getElementById('settings-overlay').style.display !== 'flex') {
+        togglePause();
+        return;
+    }
+    
+    // Don't process game keys if game is paused
+    if (isGamePaused) return;
+
     // Only act if key wasn't already pressed
     if (!keysPressedArrow[key]) {
         keysPressedArrow[key] = true;
 
-        // Handle arrow key input
-        if (arrowKeyMap[key]) {
+        // Handle arrow key input using custom keybinds
+        if (key === customKeybinds.arrowUp || key === customKeybinds.arrowDown || 
+            key === customKeybinds.arrowLeft || key === customKeybinds.arrowRight) {
+            
             // Play arrow audio
             const arrowAudio = new Audio(arrowAudioMap[key]);
-            arrowAudio.volume = 0.3; // Set volume to 30%
+            arrowAudio.volume = window.sfxVolume || 0.4;
             arrowAudio.play().catch(e => console.log("Audio play failed:", e));
 
             const arrowImg = document.createElement("img");
@@ -679,16 +837,16 @@ document.addEventListener("keydown", (e) => {
             arrowImg.classList.add("player-arrow");
 
             // Add class for colored background and add to combo list
-            if (key === "arrowup") {
+            if (key === customKeybinds.arrowUp) {
                 arrowImg.classList.add("arrow-up");
                 playerComboDirections.push("Up");
-            } else if (key === "arrowdown") {
+            } else if (key === customKeybinds.arrowDown) {
                 arrowImg.classList.add("arrow-down");
                 playerComboDirections.push("Down");
-            } else if (key === "arrowleft") {
+            } else if (key === customKeybinds.arrowLeft) {
                 arrowImg.classList.add("arrow-left");
                 playerComboDirections.push("Left");
-            } else if (key === "arrowright") {
+            } else if (key === customKeybinds.arrowRight) {
                 arrowImg.classList.add("arrow-right");
                 playerComboDirections.push("Right");
             }
@@ -711,8 +869,8 @@ document.addEventListener("keydown", (e) => {
             e.preventDefault();
         }
 
-        // Enter → compare player combo with enemy combos, then clear
-        else if (key === "enter") {
+        // Submit combo → compare player combo with enemy combos, then clear
+        else if (key === customKeybinds.submit) {
             if (playerComboDirections.length > 0) {
                 // Compare player combo with each enemy combo
                 let matchedEnemies = [];
@@ -764,6 +922,303 @@ document.addEventListener("keydown", (e) => {
         }
     }
 });
+
+// PAUSE SYSTEM
+let isPaused = false;
+let gameLoops = [];
+let enemyMovements = [];
+
+function togglePause() {
+    isPaused = !isPaused;
+    isGamePaused = isPaused; // Sync with existing pause variable
+    const pauseOverlay = document.getElementById('pause-overlay');
+    
+    if (isPaused) {
+        // Show pause overlay
+        pauseOverlay.style.display = 'flex';
+        
+        // Pause background music
+        if (currentBackgroundMusic) {
+            currentBackgroundMusic.pause();
+        }
+        
+        // Stop all game loops and animations
+        gameLoops.forEach(loopId => clearInterval(loopId));
+        gameLoops = [];
+        
+        // Stop enemy movements
+        enemyMovements.forEach(movement => {
+            if (movement.element && movement.element.style) {
+                movement.element.style.transition = 'none';
+            }
+        });
+        
+    } else {
+        // Hide pause overlay
+        pauseOverlay.style.display = 'none';
+        
+        // Resume background music
+        if (currentBackgroundMusic) {
+            currentBackgroundMusic.play().catch(error => {
+                console.log("Background music resume failed:", error);
+            });
+        }
+        
+        // Resume game loops and animations
+        resumeGameLoops();
+        resumeEnemyMovements();
+    }
+}
+
+function resumeGameLoops() {
+    // Restart any game loops that were running
+    // This would need to be implemented based on your specific game loops
+}
+
+function resumeEnemyMovements() {
+    // Resume enemy movements
+    enemyMovements.forEach(movement => {
+        if (movement.element && movement.element.style) {
+            movement.element.style.transition = '';
+        }
+    });
+}
+
+// Pause button event listener
+document.addEventListener('DOMContentLoaded', function() {
+    const pauseButton = document.getElementById('pause-button');
+    if (pauseButton) {
+        pauseButton.addEventListener('click', togglePause);
+    }
+    
+    // Continue button event listener
+    const continueBtn = document.getElementById('continue-btn');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', togglePause);
+    }
+    
+    // Card Archive button (placeholder functionality)
+    const cardArchiveBtn = document.getElementById('card-archive-btn');
+    if (cardArchiveBtn) {
+        cardArchiveBtn.addEventListener('click', function() {
+            console.log('Card Archive clicked - functionality to be implemented');
+            // Could show card archive overlay here
+        });
+    }
+    
+    // Settings button functionality
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', function() {
+            showSettingsOverlay();
+        });
+    }
+    
+    // Settings section navigation
+    const sectionTitles = document.querySelectorAll('.settings-section-title');
+    sectionTitles.forEach(title => {
+        title.addEventListener('click', function() {
+            const section = this.getAttribute('data-section');
+            showSettingsSection(section);
+        });
+    });
+    
+    // Volume slider functionality
+    const musicVolumeSlider = document.getElementById('music-volume');
+    const musicVolumeValue = document.getElementById('music-volume-value');
+    const sfxVolumeSlider = document.getElementById('sfx-volume');
+    const sfxVolumeValue = document.getElementById('sfx-volume-value');
+    
+    if (musicVolumeSlider && musicVolumeValue) {
+        musicVolumeSlider.addEventListener('input', function() {
+            const value = this.value;
+            musicVolumeValue.textContent = value + '%';
+            if (currentBackgroundMusic) {
+                currentBackgroundMusic.volume = value / 100;
+            }
+        });
+    }
+    
+    if (sfxVolumeSlider && sfxVolumeValue) {
+        sfxVolumeSlider.addEventListener('input', function() {
+            const value = this.value;
+            sfxVolumeValue.textContent = value + '%';
+            // Store SFX volume for future sound effects
+            window.sfxVolume = value / 100;
+        });
+    }
+    
+    // Exit button functionality for settings
+    const settingsExitBtn = document.getElementById('settings-exit-btn');
+    if (settingsExitBtn) {
+        settingsExitBtn.addEventListener('click', function() {
+            const pauseOverlay = document.getElementById('pause-overlay');
+            const settingsOverlay = document.getElementById('settings-overlay');
+            
+            settingsOverlay.style.display = 'none';
+            pauseOverlay.style.display = 'flex';
+        });
+    }
+    
+    // Initialize SFX volume
+    window.sfxVolume = 0.4;
+});
+
+function initializeKeybinds() {
+    // Load saved keybinds from localStorage
+    const saved = localStorage.getItem('customKeybinds');
+    if (saved) {
+        customKeybinds = { ...defaultKeybinds, ...JSON.parse(saved) };
+        updateKeybindDisplay();
+    }
+}
+
+function updateKeybindDisplay() {
+    Object.keys(customKeybinds).forEach(action => {
+        const keyElement = document.querySelector(`[data-action="${action}"]`);
+        if (keyElement) {
+            keyElement.textContent = formatKeyDisplay(customKeybinds[action]);
+        }
+    });
+}
+
+function formatKeyDisplay(key) {
+    const keyMap = {
+        'escape': 'Escape',
+        'arrowup': '↑',
+        'arrowdown': '↓',
+        'arrowleft': '←',
+        'arrowright': '→',
+        'enter': 'Enter',
+        ' ': 'Space'
+    };
+    return keyMap[key.toLowerCase()] || key.toUpperCase();
+}
+
+function startKeybindEdit(action) {
+    if (editingKeybind) return; // Already editing
+    
+    editingKeybind = action;
+    const keyElement = document.querySelector(`[data-action="${action}"]`);
+    const buttonElement = document.querySelector(`[data-action="${action}"].keybind-edit-btn`);
+    
+    keyElement.classList.add('editing');
+    buttonElement.classList.add('editing');
+    buttonElement.textContent = 'Cancel';
+    
+    // Add temporary key listener for capturing new key
+    document.addEventListener('keydown', captureNewKey, true);
+}
+
+function captureNewKey(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (editingKeybind) {
+        const key = e.key.toLowerCase();
+        
+        // ESC cancels editing
+        if (key === 'escape') {
+            cancelKeybindEdit();
+            return;
+        }
+        
+        // Check for conflicts
+        const conflictingAction = Object.keys(customKeybinds).find(
+            action => customKeybinds[action] === key && action !== editingKeybind
+        );
+        
+        if (conflictingAction) {
+            alert(`This key is already assigned to "${conflictingAction}". Please choose a different key.`);
+            return;
+        }
+        
+        // Assign new key
+        customKeybinds[editingKeybind] = key;
+        localStorage.setItem('customKeybinds', JSON.stringify(customKeybinds));
+        
+        // Update display
+        const keyElement = document.querySelector(`[data-action="${editingKeybind}"]`);
+        keyElement.textContent = formatKeyDisplay(key);
+        
+        // Update game controls
+        updateGameControls();
+        
+        cancelKeybindEdit();
+    }
+}
+
+function cancelKeybindEdit() {
+    if (editingKeybind) {
+        const keyElement = document.querySelector(`[data-action="${editingKeybind}"]`);
+        const buttonElement = document.querySelector(`[data-action="${editingKeybind}"].keybind-edit-btn`);
+        
+        keyElement.classList.remove('editing');
+        buttonElement.classList.remove('editing');
+        buttonElement.textContent = 'Edit';
+        
+        editingKeybind = null;
+        document.removeEventListener('keydown', captureNewKey, true);
+    }
+}
+
+function updateGameControls() {
+    // This function will be called to update the game's control mappings
+    // The actual game logic will need to reference customKeybinds instead of hardcoded keys
+}
+
+// Initialize keybind system
+document.addEventListener('DOMContentLoaded', function() {
+    initializeKeybinds();
+    
+    // Add event listeners to edit buttons
+    const editButtons = document.querySelectorAll('.keybind-edit-btn');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            if (editingKeybind === action) {
+                cancelKeybindEdit();
+            } else {
+                startKeybindEdit(action);
+            }
+        });
+    });
+});
+
+// SETTINGS OVERLAY FUNCTIONS
+function showSettingsOverlay() {
+    const pauseOverlay = document.getElementById('pause-overlay');
+    const settingsOverlay = document.getElementById('settings-overlay');
+    
+    // Hide pause overlay, show settings overlay
+    pauseOverlay.style.display = 'none';
+    settingsOverlay.style.display = 'flex';
+    
+    // Show first section by default
+    showSettingsSection('audio');
+}
+
+function showSettingsSection(sectionName) {
+    // Hide all sections
+    const sections = document.querySelectorAll('.settings-section');
+    sections.forEach(section => section.classList.add('hidden'));
+    
+    // Remove active class from all titles
+    const titles = document.querySelectorAll('.settings-section-title');
+    titles.forEach(title => title.classList.remove('active'));
+    
+    // Show selected section
+    const selectedSection = document.getElementById(sectionName + '-section');
+    if (selectedSection) {
+        selectedSection.classList.remove('hidden');
+    }
+    
+    // Add active class to selected title
+    const selectedTitle = document.querySelector(`[data-section="${sectionName}"]`);
+    if (selectedTitle) {
+        selectedTitle.classList.add('active');
+    }
+}
 
 // Keyup resets
 document.addEventListener("keyup", (e) => {
