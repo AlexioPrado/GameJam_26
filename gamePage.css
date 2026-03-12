@@ -19,6 +19,7 @@ body {
     width: 60px;       /* match pause button */
     height: 60px;
     cursor: pointer;
+    z-index: 1000;
 }
 
 /* Pause button styling */
@@ -26,7 +27,9 @@ body {
     width: 60px;        /* adjust size as needed */
     height: 60px;
     cursor: pointer;
+    z-index: 1000;
 }
+
 /* Heart container */
 #hearts {
     position: absolute;
@@ -34,7 +37,7 @@ body {
     left: 24px;
     display: flex;
     gap: 6px;
-    z-index: 1000; /* highest layer */
+    z-index: 998; /* highest layer */
 }
 
 /* Individual heart */
@@ -86,7 +89,7 @@ body {
     overflow: hidden;
     display: flex;
     align-items: center;
-    z-index: 1000; /* highest layer */
+    z-index: 999; /* highest layer */
 }
 
 /* Progress bar fill */
@@ -107,7 +110,7 @@ body {
     font-family: sans-serif;
     font-size: 18px;
     text-align: center;
-    z-index: 1000; /* highest layer */
+    z-index: 999; /* highest layer */
 }
 
 /* Enemy container */
@@ -185,11 +188,162 @@ body {
 .player-arrow.arrow-down {
     background-color: rgba(220, 53, 69, 0.4); /* red */
 }
-
 .player-arrow.arrow-left {
     background-color: rgba(40, 167, 69, 0.4); /* green */
 }
-
 .player-arrow.arrow-right {
     background-color: rgba(255, 193, 7, 0.4); /* yellow */
+}
+
+/* Overlay Styles */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.cards-container {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.card {
+    width: calc(50vh * 5 / 7); /* 5:7 ratio with height */
+    height: 50vh; /* Half of viewport height */
+    border: 3px solid #000; /* Black border */
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    overflow: hidden;
+    position: relative; /* For positioning circle */
+}
+
+.card-header {
+    height: 25%; /* 1/4 of card height */
+    background: #5f6ee7; /* Default color */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+}
+
+.card-content {
+    height: 75%; /* 3/4 of card height */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Space between title and text */
+    background: #32313b; /* Main interior color */
+    padding: 10px 0; /* Add padding for spacing */
+}
+
+.card-title {
+    color: white;
+    font-weight: bold;
+    font-size: 32px; /* Adjusted based on text area size */
+    text-align: center;
+    height: 33.33%; /* 1/4 of card content area */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0px 5% 0px 5%;
+}
+
+.card-text-area {
+    width: 90%;
+    height: 66.67%; /* 2/3 of card content area */
+    padding: 8px;
+    overflow-y: auto; /* Enable scrolling */
+    color: white;
+    font-size: 24px; /* Match title font size */
+    line-height: 1.4; /* Improve readability */
+    margin: 0px 3% 0px 3%; /* 1/10 of card width */
+    overflow-y: scroll;
+}
+
+/* Custom scrollbar styling for card-text-area */
+.card-text-area::-webkit-scrollbar {
+    width: 8px; /* Scrollbar width */
+}
+
+.card-text-area::-webkit-scrollbar-track {
+    background: transparent; /* No background */
+}
+
+.card-text-area::-webkit-scrollbar-thumb {
+    background: black; /* Black bar */
+    border-radius: 4px; /* Half the width */
+}
+
+.card-text-area::-webkit-scrollbar-thumb:hover {
+    background: #333; /* Darker on hover */
+}
+
+.card-circle {
+    width: 60px;
+    height: 60px;
+    background: #32313b; /* Same as card content */
+    border-radius: 50%; /* Perfect circle */
+    position: absolute;
+    top: 45px; /* Position at top */
+    left: 45px; /* Position at left */
+    transform: translate(-50%, -50%); /* Centered relative to card */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    font-size: 48px;
+    z-index: 10; /* High z-index to be on top */
+}
+
+.wave-card {
+    /* Inherits base card styles */
+}
+
+.round-card {
+    /* Inherits base card styles - same height and width as wave cards */
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+.confirm-button {
+    padding: 15px 40px;
+    font-size: 18px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.confirm-button:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Round completion specific adjustments */
+#round-completion-overlay .cards-container {
+    gap: 40px;
 }
