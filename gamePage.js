@@ -436,7 +436,6 @@ function nextRound() {
 let playerImmune = false; // tracks if player is currently immune
 let heartCounter = 3;     // initial hearts
 
-// Function to check collision between two DOM elements
 function isColliding(el1, el2) {
     const rect1 = el1.getBoundingClientRect();
     const rect2 = el2.getBoundingClientRect();
@@ -453,22 +452,103 @@ function isColliding(el1, el2) {
 function checkWaveCompletion() {
     const enemies = document.querySelectorAll(".enemy");
     
-    // If no enemies left and we're not at the max wave
+    // If no enemies left and we're not in final battle
     if (enemies.length === 0 && currentWave < maxWavesPerRound) {
-        // Advance to next wave
-        nextWave();
-        
-        // Spawn enemies for the new wave
-        spawnEnemiesForWave(currentRound, currentWave);
+        // Show wave completion cards before advancing
+        showWaveCompletionCards(() => {
+            // After cards are closed, advance to next wave
+            nextWave();
+            
+            // Spawn enemies for the new wave
+            spawnEnemiesForWave(currentRound, currentWave);
+        });
     }
-    // If no enemies left and we're at the max wave (wave 3)
+    // If no enemies left and we're in final battle (wave 4)
     else if (enemies.length === 0 && currentWave === maxWavesPerRound) {
-        // Advance to next round
-        nextRound();
-        
-        // Spawn enemies for the new round's first wave
-        spawnEnemiesForWave(currentRound, 1);
+        // Show round completion cards before advancing
+        showRoundCompletionCards(() => {
+            // After cards are closed, advance to next round
+            nextRound();
+            
+            // Spawn enemies for the new round's first wave
+            spawnEnemiesForWave(currentRound, 1);
+        });
     }
+}
+
+// Function to show wave completion overlay with 3 cards
+function showWaveCompletionCards(onComplete) {
+    // Pause game
+    pauseGame();
+    
+    // Get existing overlay elements
+    const overlay = document.getElementById("wave-completion-overlay");
+    const confirmButton = document.getElementById("wave-confirm-btn");
+    
+    // Random header colors
+    const headerColors = ['#5f6ee7', '#4ab9a3', '#ab58a8', '#5fa1e7', '#85daeb'];
+    
+    // Assign random colors to card headers
+    const cardHeaders = overlay.querySelectorAll('.card-header');
+    cardHeaders.forEach((header, index) => {
+        const randomColor = headerColors[Math.floor(Math.random() * headerColors.length)];
+        header.style.background = randomColor;
+    });
+    
+    // Show overlay
+    overlay.style.display = "flex";
+    
+    // Set up confirm button click handler
+    confirmButton.onclick = () => {
+        // Hide overlay and resume game
+        overlay.style.display = "none";
+        resumeGame();
+        onComplete();
+    };
+}
+
+// Function to show round completion overlay with 2 cards
+function showRoundCompletionCards(onComplete) {
+    // Pause game
+    pauseGame();
+    
+    // Get existing overlay elements
+    const overlay = document.getElementById("round-completion-overlay");
+    const confirmButton = document.getElementById("round-confirm-btn");
+    
+    // Random header colors
+    const headerColors = ['#5f6ee7', '#4ab9a3', '#ab58a8', '#5fa1e7', '#85daeb'];
+    
+    // Assign random colors to card headers
+    const cardHeaders = overlay.querySelectorAll('.card-header');
+    cardHeaders.forEach((header, index) => {
+        const randomColor = headerColors[Math.floor(Math.random() * headerColors.length)];
+        header.style.background = randomColor;
+    });
+    
+    // Show overlay
+    overlay.style.display = "flex";
+    
+    // Set up confirm button click handler
+    confirmButton.onclick = () => {
+        // Hide overlay and resume game
+        overlay.style.display = "none";
+        resumeGame();
+        onComplete();
+    };
+}
+
+// Game pause/resume functions
+let isGamePaused = false;
+
+function pauseGame() {
+    isGamePaused = true;
+    // Add visual pause indicator if needed
+}
+
+function resumeGame() {
+    isGamePaused = false;
+    // Remove visual pause indicator if needed
 }
 
 // Function to decrease player hearts
