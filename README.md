@@ -1,5 +1,38 @@
 # GameJam_26
 
+## Audio Effects
+- [ ] Arrows
+- [ ] Correct/Incorrect combo
+- [ ] enemy death/splatter
+- [ ] lose health
+- [ ] Background music
+- [ ] Pause/Menu button click
+- [ ] Inventory button click
+## Design Changes
+- [ ] Font
+- [ ] Background
+- [ ] Pause/Menu Overlay
+- [ ] Card Archive Overlay
+- [ ] Inventory Overlay
+## Features to add
+- [ ] Score:
+  - [ ] Multipliers
+  - [ ] Combos, enemy death, card effects increases score
+  - [ ] Lose of health, Wrong combo removes multipliers and decrease score
+  - [ ] Set amount of score added based on enemy death, flat increase of score based on length of combo
+  - [ ] Score influence the rarity of cards appearing at the end round
+- [ ] Card System:
+  - [ ] Three cards to select per wave and 2 cards to select per round
+  - [ ] Different categories and rarity (S, A, B)
+  - [ ] All types of cards can be viewed in menu/pause
+- [ ] Skill System:
+  - [ ] Press E to activate a special effect
+  - [ ] Can be obtained by card at the end of each round
+  - [ ] Can be adjusted from Inventory
+- [ ] Settings:
+  - [ ] Toggle Audio
+
+
 ## Tower of Boohbah (Tower of Babel)
 
 ## Requirements
