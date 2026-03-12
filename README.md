@@ -8,6 +8,9 @@
 - [ ] Background music
 - [ ] Pause/Menu button click
 - [ ] Inventory button click
+- [ ] General button click
+- [ ] Hover cards
+- [ ] Selecting cards
 ## Design Changes
 - [ ] Font
 - [ ] Background
@@ -31,6 +34,8 @@
   - [ ] Can be adjusted from Inventory
 - [ ] Settings:
   - [ ] Toggle Audio
+- [ ] Round & Wave Banner:
+  - [ ] When round or wave is about to begin, move a bnnaer from left to right showing round number or wave number      
 
 
 ## Tower of Boohbah (Tower of Babel)
