@@ -23,6 +23,17 @@
         <img id="menu-button" src="uiAssets/menuGrid.png" alt="Menu">
         <img id="pause-button" src="uiAssets/pause.png" alt="Pause">
     </div>  
+
+    <!-- Score Board -->
+    <div id="score-board">
+        <div class="score-title">Score:</div>
+        <div class="score-total" id="score-total">0</div>
+        <div class="multiplier-container">
+            <div class="multiplier-number" id="multiplier-number">1.0</div>
+            <div class="multiplier-bar" id="multiplier-bar"></div>
+        </div>
+        <div class="combo-counter" id="combo-counter">Combo: 0</div>
+    </div>
         
     <!-- Player Arrow Combo Container -->
     <div id="player-arrow-container"></div>
@@ -30,7 +41,7 @@
     <!-- Wave Completion Overlay (Hidden by default) -->
     <div id="wave-completion-overlay" class="overlay">
         <div class="cards-container">
-            <div class="card wave-card">
+            <div class="card wave-card" id="wave-card-1">
                 <div class="card-header">Card 1</div>
                 <div class="card-content">
                     <div class="card-title">Title 1</div>
@@ -38,7 +49,7 @@
                 </div>
                 <div class="card-circle">S</div>
             </div>
-            <div class="card wave-card">
+            <div class="card wave-card" id="wave-card-2">
                 <div class="card-header">Card 2</div>
                 <div class="card-content">
                     <div class="card-title">Title 2</div>
@@ -46,7 +57,7 @@
                 </div>
                 <div class="card-circle">A</div>
             </div>
-            <div class="card wave-card">
+            <div class="card wave-card" id="wave-card-3">
                 <div class="card-header">Card 3</div>
                 <div class="card-content">
                     <div class="card-title">Title 3</div>
@@ -61,7 +72,7 @@
     <!-- Round Completion Overlay (Hidden by default) -->
     <div id="round-completion-overlay" class="overlay">
         <div class="cards-container">
-            <div class="card round-card">
+            <div class="card round-card" id="round-card-1">
                 <div class="card-header">Round Card 1</div>
                 <div class="card-content">
                     <div class="card-title">Round Title 1</div>
@@ -69,7 +80,7 @@
                 </div>
                 <div class="card-circle">S</div>
             </div>
-            <div class="card round-card">
+            <div class="card round-card" id="round-card-2">
                 <div class="card-header">Round Card 2</div>
                 <div class="card-content">
                     <div class="card-title">Round Title 2</div>
@@ -89,6 +100,49 @@
                 <button class="pause-button-item" id="continue-btn">Continue</button>
                 <button class="pause-button-item" id="card-archive-btn">Card Archive</button>
                 <button class="pause-button-item" id="settings-btn">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Archive Overlay (Hidden by default) -->
+    <div id="card-archive-overlay" class="overlay">
+        <div class="card-archive-content">
+            <div class="card-archive-header">
+                <h2>Card Archive</h2>
+                <button class="close-btn" id="card-archive-close-btn">×</button>
+            </div>
+            <div class="card-archive-body">
+                <!-- Left container - Card types -->
+                <div class="card-types-container">
+                    <h3>Card Types</h3>
+                    <div class="card-type-list">
+                        <div class="card-type active" data-type="defense">Defense</div>
+                        <div class="card-type" data-type="attack">Attack</div>
+                        <div class="card-type" data-type="movement">Movement</div>
+                        <div class="card-type" data-type="score">Score</div>
+                        <div class="card-type" data-type="skill">Skill</div>
+                    </div>
+                </div>
+                
+                <!-- Right container - Card list and details -->
+                <div class="cards-details-container">
+                    <!-- Card list (left side of right container) -->
+                    <div class="card-list-container">
+                        <div class="card-list" id="card-list">
+                            <!-- Cards will be populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Card details (right side of right container) -->
+                    <div class="card-details-container">
+                        <h3>Card Details</h3>
+                        <div class="card-details" id="card-details">
+                            <div class="no-card-selected">
+                                <p>Select a card to view its details</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

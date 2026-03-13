@@ -4,6 +4,8 @@ let isGamePaused = false;
 // MUSIC SELECTION SYSTEM
 let currentMusicIndex = 0;
 
+let consecutiveComboCount = 0; // Track consecutive correct combos
+
 function initializeMusicSelector() {
     // Load saved music preference
     const savedMusicIndex = localStorage.getItem('selectedMusicIndex');
@@ -54,6 +56,7 @@ function playRandomBackgroundMusic() {
     currentBackgroundMusic = new Audio(selectedMusic);
     currentBackgroundMusic.loop = true;
     currentBackgroundMusic.volume = 0.3; // Set volume to 30%
+    originalMusicVolume = 0.3; // Store original volume
     
     // Play the music
     currentBackgroundMusic.play().catch(error => {
@@ -83,7 +86,673 @@ const defaultKeybinds = {
 let customKeybinds = { ...defaultKeybinds };
 let editingKeybind = null;
 
+// CARD SELECTION SYSTEM
+// Get wave cards by ID
+const waveCard1 = document.getElementById('wave-card-1');
+const waveCard2 = document.getElementById('wave-card-2');
+const waveCard3 = document.getElementById('wave-card-3');
 
+// Get round cards by ID
+const roundCard1 = document.getElementById('round-card-1');
+const roundCard2 = document.getElementById('round-card-2');
+
+// Store selected cards
+let selectedWaveCard = null;
+let selectedRoundCard = null;
+
+// Card inventory system
+const cardInventory = {};
+
+// Store current displayed cards for reference
+let currentWaveCards = [];
+let currentRoundCards = [];
+
+// Centralized card selection handler
+function createCardSelectionHandler(cardElement, isWaveCard) {
+    return () => {
+        const cardIndex = parseInt(cardElement.dataset.cardIndex);
+        if (!isNaN(cardIndex)) {
+            if (isWaveCard) {
+                selectWaveCard(cardElement, cardIndex);
+            } else {
+                selectRoundCard(cardElement, cardIndex);
+            }
+        }
+    };
+}
+
+// Add event listeners to wave cards
+const waveCards = [waveCard1, waveCard2, waveCard3];
+waveCards.forEach(card => {
+    if (card) {
+        card.addEventListener('click', createCardSelectionHandler(card, true));
+    }
+});
+
+// Add event listeners to round cards
+const roundCards = [roundCard1, roundCard2];
+roundCards.forEach(card => {
+    if (card) {
+        card.addEventListener('click', createCardSelectionHandler(card, false));
+    }
+});
+
+// Card creation utilities
+function createCardElement(card, index, isWaveCard) {
+    const cardContainer = document.createElement('div');
+    cardContainer.className = `card ${isWaveCard ? 'wave' : 'round'}-card ${card.rarity.toLowerCase()}-rarity`;
+    cardContainer.dataset.cardId = card.id;
+    cardContainer.dataset.cardIndex = index;
+    
+    // Create card structure
+    const cardHeader = document.createElement('div');
+    cardHeader.className = 'card-header';
+    
+    const cardContent = document.createElement('div');
+    cardContent.className = 'card-content';
+    
+    const cardTitle = document.createElement('div');
+    cardTitle.className = 'card-title';
+    cardTitle.textContent = card.name;
+    
+    const cardDescription = document.createElement('div');
+    cardDescription.className = 'card-text-area';
+    cardDescription.textContent = card.description;
+    
+    const cardCircle = document.createElement('div');
+    cardCircle.className = 'card-circle';
+    cardCircle.textContent = card.rarity;
+    
+    // Assemble card
+    cardContent.appendChild(cardTitle);
+    cardContainer.appendChild(cardHeader);
+    cardContainer.appendChild(cardContent);
+    cardContainer.appendChild(cardCircle);
+    
+    // Add click event
+    cardContainer.onclick = () => {
+        if (isWaveCard) {
+            selectWaveCard(cardContainer, index);
+        } else {
+            selectRoundCard(cardContainer, index);
+        }
+    };
+    
+    // Add cursor styling
+    cardContainer.style.cursor = 'pointer';
+    
+    return cardContainer;
+}
+
+function updateExistingCardElement(cardElement, card, index) {
+    const cardType = card.id.split('_')[0];
+    const headerColor = getCardTypeColor(cardType);
+    
+    // Update card header
+    const cardHeader = cardElement.querySelector('.card-header');
+    if (cardHeader) {
+        cardHeader.style.backgroundColor = headerColor;
+        cardHeader.textContent = cardType.toUpperCase();
+    }
+    
+    // Update card content
+    const cardTitle = cardElement.querySelector('.card-title');
+    if (cardTitle) cardTitle.textContent = card.name;
+    
+    const cardDescription = cardElement.querySelector('.card-text-area');
+    if (cardDescription) cardDescription.textContent = card.description;
+    
+    const cardCircle = cardElement.querySelector('.card-circle');
+    if (cardCircle) cardCircle.textContent = card.rarity;
+    
+    // Store index and add click handler
+    cardElement.dataset.cardIndex = index;
+    cardElement.onclick = () => selectRoundCard(cardElement, index);
+    cardElement.style.cursor = 'pointer';
+}
+
+// Random card selection utilities
+function selectRandomCards(allCards, count, requireDifferentTypes = false) {
+    const selectedCards = [];
+    const usedTypes = new Set();
+    const usedIndices = new Set();
+    
+    while (selectedCards.length < count && usedIndices.size < allCards.length) {
+        const randomIndex = Math.floor(Math.random() * allCards.length);
+        if (usedIndices.has(randomIndex)) continue;
+        
+        const card = allCards[randomIndex];
+        const cardType = card.id.split('_')[0];
+        
+        if (requireDifferentTypes && usedTypes.has(cardType)) continue;
+        
+        selectedCards.push(card);
+        usedIndices.add(randomIndex);
+        if (requireDifferentTypes) usedTypes.add(cardType);
+    }
+    
+    return selectedCards;
+}
+const waveRoundCardDatabase = {
+    defense: [
+        // A Rarity (4 cards)
+        { id: 'defense_a1', name: 'Heal II', rarity: 'A', description: 'Heal by 1 heart for every 5 consecutive combos.', function: 'healPlayer', implement: 'healPlayer(1)' },
+        { id: 'defense_a2', name: 'Health II', rarity: 'A', description: 'Increase Max Health by 2 hearts and heal to Max Health.', function: 'increaseMaxHealth', implement: 'increaseMaxHealth(2)' },
+        { id: 'defense_a3', name: 'Dodge II', rarity: 'A', description: 'When you take damage, you have a 40% chance of not losing health.', function: 'dodgeDamage', implement: 'dodgeDamage(0.4)' },
+        { id: 'defense_a4', name: 'Heal: Even', rarity: 'A', description: 'Healt by 2 hearts in Rounds of an even number.', function: 'healPlayer', implement: 'healPlayer(2)' },
+        // B Rarity (6 cards)
+        { id: 'defense_b1', name: 'Heal I', rarity: 'B', description: 'Heal by 1 heart at the end of each round.', function: 'healPlayer', implement: 'healPlayer(1)' },
+        { id: 'defense_b2', name: 'Health I', rarity: 'B', description: 'Increase Max Health by 1.', function: 'increaseMaxHealth', implement: 'increaseMaxHealth(1)' },
+        { id: 'defense_b3', name: 'Wound Pulse', rarity: 'B', description: 'When you take damage, repel enemies for 1 second.', function: 'repelEnemies', implement: 'repelEnemies(1)' },
+        { id: 'defense_b4', name: 'Dodge I', rarity: 'B', description: 'When you take damage, slow enemies for 2 seconds.', function: 'slowEnemies', implement: 'slowEnemies(2)' },
+        { id: 'defense_b5', name: 'Blight', rarity: 'B', description: 'When you take damage, you have a 20% chance of not losing health.', function: 'dodgeDamage', implement: 'dodgeDamage(0.2)' },
+        { id: 'defense_b6', name: 'Shield', rarity: 'B', description: 'When an enemy is close to you, create a shield that lasts for 2 seconds. Cooldown: 10 seconds', function: 'createShield', implement: 'createShield(2)' }
+    ],
+    score: [
+        // A Rarity (7 cards)
+        { id: 'score_a1', name: 'Double No Chance!', rarity: 'A', description: 'Double score of an enemy when there are 3 combos in succession.', function: 'doubleScore', implement: 'doubleScore()' },
+        { id: 'score_a2', name: 'Multiplier Ceiling', rarity: 'A', description: 'Set multiplier max from x3 to x5', function: 'setMultiplierCeiling', implement: 'setMultiplierCeiling(5)' },
+        { id: 'score_a3', name: 'Multiplier Duration', rarity: 'A', description: 'Increase multiplier duration from 4 to 5 seconds.', function: 'increaseMultiplierDuration', implement: 'increaseMultiplierDuration(5)' },
+        { id: 'score_a4', name: 'Free Score!', rarity: 'A', description: 'Set multiplier base to x1.7', function: 'setMultiplierBase', implement: 'setMultiplierBase(1.7)' },
+        { id: 'score_a5', name: 'Multiplier Increase II', rarity: 'A', description: '20% of getting a Flat 10,000 score at end of a round.', function: 'increaseMultiplier', implement: 'increaseMultiplier(0.2)' },
+        { id: 'score_a6', name: 'Score Insurance', rarity: 'A', description: 'When damaged, reduce score decrease by half.', function: 'reduceScoreDecrease', implement: 'reduceScoreDecrease(0.5)' },
+        { id: 'score_a7', name: 'Combo Insurance', rarity: 'A', description: 'When incorrectly entering a combo, 40% chance it does not remove the multiplier.', function: 'comboInsurance', implement: 'comboInsurance(0.4)' },
+        // B Rarity (5 cards)
+        { id: 'score_b1', name: 'Double Chance', rarity: 'B', description: '50% Chance of doubling score of an enemy. Doubles before multiplier is applied.', function: 'doubleScore', implement: 'doubleScore()' },
+        { id: 'score_b2', name: 'Base Increase', rarity: 'B', description: 'Increase base score by 10.', function: 'increaseBaseScore', implement: 'increaseBaseScore(10)' },
+        { id: 'score_b3', name: 'Multiplier Increase I', rarity: 'B', description: 'Set multiplier base to x1.5', function: 'setMultiplierBase', implement: 'setMultiplierBase(1.5)' },
+        { id: 'score_b4', name: 'North South Bonus', rarity: 'B', description: 'For every Up and Down arrow used in a correct combo, increase score of an enemy by 2.', function: 'northSouthBonus', implement: 'northSouthBonus(2)' },
+        { id: 'score_b5', name: 'East West Bonus', rarity: 'B', description: 'For every Left and Right arrow used in a correct combo, increase score of an enemy by 2.', function: 'eastWestBonus', implement: 'eastWestBonus(2)' }
+    ],
+    movement: [
+        // A Rarity (4 cards)
+        { id: 'movement_a1', name: 'Dash', rarity: 'A', description: 'Dash towards specified direction.', function: 'dash', implement: 'dash()' },
+        { id: 'movement_a2', name: 'Speed', rarity: 'A', description: 'Increase speed for 3 seconds.', function: 'increaseSpeed', implement: 'increaseSpeed(3)' },
+        { id: 'movement_a3', name: 'I SAID JUMP', rarity: 'A', description: 'Jump towards the cursor\'s position.', function: 'jump', implement: 'jump()' },
+        { id: 'movement_a4', name: 'Switch!', rarity: 'A', description: 'Switch positions with the furthest enemy.', function: 'switchPositions', implement: 'switchPositions()' }
+    ],
+    attack: [
+        // A Rarity (6 cards)
+        { id: 'attack_a1', name: 'Minimum Combo', rarity: 'A', description: 'When defeating an enemy, 20% chance of an enemy on the field to have their combo reduced to minimum combo length.', function: 'reduceCombo', implement: 'reduceCombo(0.2)' },
+        { id: 'attack_a2', name: 'Consecutive Combo I', rarity: 'A', description: 'For every 3 consecutive combos, reduce all enemy combo lengths by 1.', function: 'reduceComboLength', implement: 'reduceComboLength(1)' },
+        { id: 'attack_a3', name: 'Bystander Death', rarity: 'A', description: 'When defeating an enemy, 10% chance of killing a random enemy on the field.', function: 'killRandomEnemy', implement: 'killRandomEnemy(0.1)' },
+        { id: 'attack_a4', name: 'Combo Reduction: Correct', rarity: 'A', description: 'When defeating an enemy, 40% chance of reducing an enemy\'s combo length by 1.', function: 'reduceCombo', implement: 'reduceCombo(0.4)' },
+        { id: 'attack_a5', name: 'Combo Reduction: Incorrect', rarity: 'A', description: 'If you enter a wrong combo, 30% chance of reducing an enemy\'s combo length by 1.', function: 'reduceCombo', implement: 'reduceCombo(0.3)' },
+        { id: 'attack_a6', name: 'Combo Reduction: Longest Combo', rarity: 'A', description: 'When defeating an enemy, 20% chance of reducing the enemy with the longest combo length by 2.', function: 'reduceLongestCombo', implement: 'reduceLongestCombo(0.2)' },
+        // S Rarity (2 cards)
+        { id: 'attack_s1', name: 'Consecutive Combo II', rarity: 'S', description: 'For every 3 consecutive combos, reduce all enemy combo lengths by 2.', function: 'reduceComboLength', implement: 'reduceComboLength(2)' },
+        { id: 'attack_s2', name: 'Twin Telepathy', rarity: 'S', description: 'When defeating an enemy, 30% chance giving two enemies on the field to have the same combo.', function: 'twinTelepathy', implement: 'twinTelepathy(0.3)' }
+    ],
+    skill: [
+        // S Rarity (6 cards)
+        { id: 'skill_s1', name: 'Invincible', rarity: 'S', description: 'Become invulnerable from damage for 8 seconds. Cooldown: 25 seconds', function: 'invincible', implement: 'invincible(8)' },
+        { id: 'skill_s2', name: 'Shockwave', rarity: 'S', description: 'Reduce combo length of all enemies by 3. Cooldown: 30 seconds', function: 'shockwave', implement: 'shockwave(3)' },
+        { id: 'skill_s3', name: 'Time Freeze', rarity: 'S', description: 'Enemies freeze for 3 seconds. Cooldown: 25 seconds', function: 'timeFreeze', implement: 'timeFreeze(3)' },
+        { id: 'skill_s4', name: 'Disorient', rarity: 'S', description: 'Enemies become distraught and move in random directions for 4 seconds. Cooldown: 20 seconds', function: 'disorient', implement: 'disorient(4)' },
+        { id: 'skill_s5', name: 'Your Just Like Me!', rarity: 'S', description: 'Set a random amount of 2 to 4 enemies to have the same combo. Cooldown: 15 seconds', function: 'yourJustLikeMe', implement: 'yourJustLikeMe(2, 4)' },
+        { id: 'skill_s6', name: 'Cardinal Direction', rarity: 'S', description: 'Change all enemies to have combos using only one cardinal direction. Cooldown: 60 seconds', function: 'cardinalDirection', implement: 'cardinalDirection()' }
+    ]
+};
+
+const cardDatabase = {
+    defense: [
+        // ... rest of the code remains the same ...
+        {
+            id: 'defense_shield',
+            name: 'Shield Barrier'
+        },
+        {
+            id: 'defense_armor',
+            name: 'Armor Plating'
+        },
+        {
+            id: 'defensive_field',
+            name: 'Force Field'
+        },
+        {
+            id: 'defense_repair',
+            name: 'Repair Drone'
+        },
+        {
+            id: 'defense_fortify',
+            name: 'Fortify Position'
+        },
+        {
+            id: 'defense_absorb',
+            name: 'Energy Absorb'
+        },
+        {
+            id: 'defense_counter',
+            name: 'Counter Attack'
+        },
+        {
+            id: 'defense_barrier',
+            name: 'Defensive Wall'
+        },
+        {
+            id: 'defense_guardian',
+            name: 'Guardian Shield'
+        },
+        {
+            id: 'defense_sanctuary',
+            name: 'Sanctuary Ward'
+        },
+        {
+            id: 'defense_aegis',
+            name: 'Aegis Defense'
+        }
+    ],
+    attack: [
+        {
+            id: 'attack_laser',
+            name: 'Laser Beam'
+        },
+        {
+            id: 'attack_missile',
+            name: 'Homing Missile'
+        },
+        {
+            id: 'attack_blast',
+            name: 'Explosive Blast'
+        },
+        {
+            id: 'attack_chain',
+            name: 'Chain Lightning'
+        },
+        {
+            id: 'attack_volley',
+            name: 'Arrow Volley'
+        },
+        {
+            id: 'attack_bombard',
+            name: 'Bombardment'
+        },
+        {
+            id: 'assault_strike',
+            name: 'Assault Strike'
+        },
+        {
+            id: 'attack_flurry',
+            name: 'Blade Flurry'
+        },
+        {
+            id: 'attack_onslaught',
+            name: 'Onslaught Wave'
+        },
+        {
+            id: 'attack_devastate',
+            name: 'Devastating Blow'
+        }
+    ],
+    movement: [
+        {
+            id: 'movement_dash',
+            name: 'Quick Dash'
+        },
+        {
+            id: 'movement_teleport',
+            name: 'Phase Shift'
+        },
+        {
+            id: 'movement_blink',
+            name: 'Blink Step'
+        },
+        {
+            id: 'movement_gravity',
+            name: 'Gravity Well'
+        },
+        {
+            id: 'movement_speed',
+            name: 'Speed Boost'
+        },
+        {
+            id: 'movement_flight',
+            name: 'Flight Mode'
+        },
+        {
+            id: 'movement_portal',
+            name: 'Portal Jump'
+        },
+        {
+            id: 'movement_echo',
+            name: 'Echo Step'
+        }
+    ],
+    score: [
+        {
+            id: 'score_double',
+            name: 'Double Points'
+        },
+        {
+            id: 'score_multiplier',
+            name: 'Score Multiplier'
+        },
+        {
+            id: 'score_bonus',
+            name: 'Combo Bonus'
+        },
+        {
+            id: 'score_perfect',
+            name: 'Perfect Clear'
+        },
+        {
+            id: 'score_chain',
+            name: 'Score Chain'
+        },
+        {
+            id: 'score_mega',
+            name: 'Mega Points'
+        },
+        {
+            id: 'score_ultimate',
+            name: 'Ultimate Score'
+        },
+        {
+            id: 'score_cascade',
+            name: 'Point Cascade'
+        },
+        {
+            id: 'score_infinite',
+            name: 'Infinite Score'
+        },
+        {
+            id: 'score_legendary',
+            name: 'Legendary Bonus'
+        }
+    ],
+    skill: [
+        {
+            id: 'skill_time_slow',
+            name: 'Time Dilation'
+        },
+        {
+            id: 'skill_freeze',
+            name: 'Enemy Freeze'
+        },
+        {
+            id: 'skill_pattern_master',
+            name: 'Pattern Master'
+        },
+        {
+            id: 'skill_precision',
+            name: 'Precision Mode'
+        },
+        {
+            id: 'skill_reflex',
+            name: 'Reflex Boost'
+        },
+        {
+            id: 'skill_focus',
+            name: 'Laser Focus'
+        },
+        {
+            id: 'skill_instinct',
+            name: 'Battle Instinct'
+        },
+        {
+            id: 'skill_zen',
+            name: 'Zen State'
+        },
+        {
+            id: 'skill_awakening',
+            name: 'Power Awakening'
+        },
+        {
+            id: 'skill_transcend',
+            name: 'Transcend Mode'
+        }
+    ]
+};
+
+function showWaveCompletion() {
+    const waveCompletionOverlay = document.getElementById('wave-completion-overlay');
+    waveCompletionOverlay.style.display = 'flex';
+    
+    // Get all available cards from database
+    const allCards = Object.values(waveRoundCardDatabase).flat();
+    
+    // Select 3 random cards
+    const selectedCards = selectRandomCards(allCards, 3);
+    currentWaveCards = selectedCards;
+    
+    // Display cards using utility function
+    const cardList = waveCompletionOverlay.querySelector('.cards-container');
+    cardList.innerHTML = '';
+    
+    selectedCards.forEach((card, index) => {
+        const cardElement = createCardElement(card, index, true);
+        cardList.appendChild(cardElement);
+    });
+}
+
+function getCardTypeColor(rarity) {
+    switch(rarity) {
+        case 'S': return '#FFD700'; // Gold
+        case 'A': return '#C0C0C0'; // Blue  
+        case 'B': return '#808080'; // Gray
+        default: return '#666666'; // Dark gray
+    }
+}
+
+function showRoundCompletionCards(onComplete) {
+    pauseGame();
+    
+    const overlay = document.getElementById("round-completion-overlay");
+    
+    // Get all A and S rarity cards
+    const allASCards = Object.values(waveRoundCardDatabase)
+        .flat()
+        .filter(card => card.rarity === 'A' || card.rarity === 'S');
+    
+    // Select 2 cards from different types with at least one S
+    const selectedCards = selectRandomCards(allASCards, 2, true);
+    currentRoundCards = selectedCards;
+    
+    // Update existing card elements
+    const cardElements = overlay.querySelectorAll('.round-card');
+    cardElements.forEach((cardElement, index) => {
+        if (selectedCards[index]) {
+            updateExistingCardElement(cardElement, selectedCards[index], index);
+        }
+    });
+    
+    // Show overlay
+    overlay.style.display = "flex";
+    
+    // Set up confirm button
+    const confirmButton = document.getElementById("round-confirm-btn");
+    if (confirmButton) {
+        confirmButton.onclick = () => {
+            overlay.style.display = "none";
+            resumeGame();
+            onComplete();
+        };
+    }
+}
+
+
+function hideWaveCompletion() {
+    const waveCompletionOverlay = document.getElementById('wave-completion-overlay');
+    waveCompletionOverlay.style.display = 'none';
+}
+
+function hideRoundCompletion() {
+    const roundCompletionOverlay = document.getElementById('round-completion-overlay');
+    roundCompletionOverlay.style.display = 'none';
+}
+
+// Centralized card selection logic
+function selectCard(cardElement, cardIndex, isWaveCard) {
+    const currentCards = isWaveCard ? currentWaveCards : currentRoundCards;
+    const selectedCardRef = isWaveCard ? 'selectedWaveCard' : 'selectedRoundCard';
+    const selectedCard = isWaveCard ? selectedWaveCard : selectedRoundCard;
+    const cardType = isWaveCard ? 'wave' : 'round';
+    
+    // If this card is already selected, deselect it
+    if (selectedCard === cardElement) {
+        cardElement.style.border = '';
+        cardElement.style.boxShadow = '';
+        if (isWaveCard) selectedWaveCard = null;
+        else selectedRoundCard = null;
+        console.log(`Deselected ${cardType} card:`, cardElement.id);
+        return;
+    }
+    
+    // Deselect previously selected card if any
+    if (selectedCard) {
+        selectedCard.style.border = '';
+        selectedCard.style.boxShadow = '';
+    }
+    
+    // Select the new card
+    cardElement.style.border = '3px solid #00ff00';
+    cardElement.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.5)';
+    if (isWaveCard) selectedWaveCard = cardElement;
+    else selectedRoundCard = cardElement;
+    
+    // Get the card data and add to inventory
+    const selectedCardData = currentCards[cardIndex];
+    if (selectedCardData) {
+        console.log(`Selected ${cardType} card data:`, selectedCardData);
+        
+        // Add card to inventory
+        cardInventory[selectedCardData.id] = selectedCardData;
+        console.log(`Added card ${selectedCardData.id} to inventory`);
+        console.log('Current inventory:', Object.keys(cardInventory));
+        console.log('Inventory contents:', cardInventory);
+        
+        // Remove card from database
+        const cardTypeFromId = selectedCardData.id.split('_')[0];
+        const typeArray = waveRoundCardDatabase[cardTypeFromId];
+        if (typeArray) {
+            const cardIndexInDatabase = typeArray.findIndex(card => card.id === selectedCardData.id);
+            if (cardIndexInDatabase !== -1) {
+                typeArray.splice(cardIndexInDatabase, 1);
+                console.log(`Removed card ${selectedCardData.id} from database`);
+            }
+        }
+    }
+}
+
+function selectWaveCard(cardElement, cardIndex) {
+    selectCard(cardElement, cardIndex, true);
+}
+
+function selectRoundCard(cardElement, cardIndex) {
+    selectCard(cardElement, cardIndex, false);
+}
+
+function showCardArchive() {
+    const cardArchiveOverlay = document.getElementById('card-archive-overlay');
+    cardArchiveOverlay.style.display = 'flex';
+    
+    // Initialize with defense cards
+    loadCardType('defense');
+    
+    // Pause game while archive is open
+    if (!isGamePaused) {
+        togglePause();
+    }
+}
+
+function hideCardArchive() {
+    const cardArchiveOverlay = document.getElementById('card-archive-overlay');
+    cardArchiveOverlay.style.display = 'none';
+    
+    // Show pause overlay instead of resuming game
+    const pauseOverlay = document.getElementById('pause-overlay');
+    pauseOverlay.style.display = 'flex';
+}
+
+function loadCardType(type) {
+    currentCardType = type;
+    selectedCard = null;
+    
+    // Update active card type button
+    document.querySelectorAll('.card-type').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type === type) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Clear and populate card list with card-style layout
+    const cardList = document.getElementById('card-list');
+    cardList.innerHTML = '';
+    
+    const cards = cardDatabase[type] || [];
+    cards.forEach(card => {
+        // Create card container like wave/round cards
+        const cardContainer = document.createElement('div');
+        cardContainer.className = `card-item ${type}-type`;
+        cardContainer.dataset.cardId = card.id;
+        
+        // Create card structure similar to wave/round cards
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header';
+        // Remove text from header - just a colored bar
+        
+        const cardContent = document.createElement('div');
+        cardContent.className = 'card-content';
+        
+        const cardTitle = document.createElement('div');
+        cardTitle.className = 'card-title';
+        cardTitle.textContent = card.name;
+        
+        // Assemble card
+        cardContent.appendChild(cardTitle);
+        cardContainer.appendChild(cardHeader);
+        cardContainer.appendChild(cardContent);
+        
+        cardContainer.addEventListener('click', () => selectCard(card));
+        
+        cardList.appendChild(cardContainer);
+    });
+    
+    // Clear card details
+    updateCardDetails(null);
+}
+
+function selectCard(card) {
+    selectedCard = card;
+    
+    // Update selected card visual
+    document.querySelectorAll('.card-item').forEach(item => {
+        item.classList.remove('selected');
+        if (item.dataset.cardId === card.id) {
+            item.classList.add('selected');
+        }
+    });
+    
+    // Update card details
+    updateCardDetails(card);
+}
+
+function updateCardDetails(card) {
+    const cardDetails = document.getElementById('card-details');
+    
+    if (!card) {
+        cardDetails.innerHTML = `
+            <div class="no-card-selected">
+                <p>Select a card to view its details</p>
+            </div>
+        `;
+        return;
+    }
+    
+    cardDetails.innerHTML = `
+        <div class="card-detail-content">
+            <h4>${card.name}</h4>
+            <div class="card-description">
+                <strong>Description:</strong> ${card.description}
+            </div>
+            <div class="card-functionality">
+                <h5>Functionality:</h5>
+                <p>${card.functionality}</p>
+            </div>
+        </div>
+    `;
+}
 
 // BACKGROUND MUSIC SYSTEM
 const backgroundMusicFiles = [
@@ -93,6 +762,105 @@ const backgroundMusicFiles = [
 ];
 
 let currentBackgroundMusic = null;
+let originalMusicVolume = 0.3; // Store original volume
+
+// SCORE SYSTEM
+let totalScore = 0;
+let currentMultiplier = 1.0;
+let multiplierDuration = 0;
+const BASE_SCORE = 10;
+const MULTIPLIER_DURATION = 4000; // 4 seconds in milliseconds
+const MULTIPLIER_INCREMENT = 0.5;
+const MAX_MULTIPLIER = 3.0;
+
+function updateScore(points) {
+    totalScore += Math.floor(points * currentMultiplier);
+    document.getElementById('score-total').textContent = totalScore;
+}
+
+function increaseMultiplier() {
+    currentMultiplier = Math.min(currentMultiplier + MULTIPLIER_INCREMENT, MAX_MULTIPLIER);
+    multiplierDuration = MULTIPLIER_DURATION;
+    updateMultiplierDisplay();
+}
+
+function updateMultiplierDisplay() {
+    const multiplierNumber = document.getElementById('multiplier-number');
+    const multiplierBar = document.getElementById('multiplier-bar');
+    
+    multiplierNumber.textContent = currentMultiplier.toFixed(1);
+    
+    if (currentMultiplier > 1) {
+        multiplierBar.style.display = 'block';
+        const percentage = (multiplierDuration / MULTIPLIER_DURATION) * 100;
+        multiplierBar.style.setProperty('--bar-width', `${percentage}%`);
+    } else {
+        multiplierBar.style.display = 'none';
+    }
+}
+
+function updateMultiplierTimer(deltaTime) {
+    if (currentMultiplier > 1 && multiplierDuration > 0) {
+        multiplierDuration -= deltaTime;
+        if (multiplierDuration <= 0) {
+            currentMultiplier = 1.0;
+            multiplierDuration = 0;
+        }
+        updateMultiplierDisplay();
+    }
+}
+
+function updateComboDisplay() {
+    const comboCounter = document.getElementById('combo-counter');
+    if (comboCounter) {
+        comboCounter.textContent = `Combo: ${consecutiveComboCount}`;
+    }
+}
+
+function defeatEnemy() {
+    // Calculate base score with combo length bonus
+    let scoreMultiplier = 1;
+    
+    // Find the enemy that was defeated and check its combo length
+    const enemies = document.querySelectorAll(".enemy");
+    enemies.forEach(enemy => {
+        if (!enemy.parentElement) { // Enemy has been removed
+            // Find original combo data for this enemy
+            const enemyCombo = enemyCombos.find(ec => ec.enemyElement === enemy);
+            if (enemyCombo && enemyCombo.combo.length > 4) {
+                // Add 5 points per arrow past 4
+                const bonusPoints = (enemyCombo.combo.length - 4) * 5;
+                scoreMultiplier = 1 + (bonusPoints / BASE_SCORE);
+            }
+        }
+    });
+    
+    updateScore(BASE_SCORE * scoreMultiplier);
+    increaseMultiplier();
+    updateComboDisplay();
+}
+
+// Main game loop
+let lastTime = 0;
+function gameLoop(currentTime) {
+    if (!lastTime) lastTime = currentTime;
+    
+    const deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+    
+    // Only update multiplier timer if game is not paused and no overlays are open
+    if (!isGamePaused && 
+        document.getElementById('wave-completion-overlay').style.display !== 'flex' &&
+        document.getElementById('round-completion-overlay').style.display !== 'flex') {
+        updateMultiplierTimer(deltaTime);
+    }
+    
+    // Continue game loop
+    requestAnimationFrame(gameLoop);
+}
+
+// Start the game loop
+requestAnimationFrame(gameLoop);
 
 function playRandomBackgroundMusic() {
     // Stop current music if playing
@@ -109,6 +877,7 @@ function playRandomBackgroundMusic() {
     currentBackgroundMusic = new Audio(selectedMusic);
     currentBackgroundMusic.loop = true;
     currentBackgroundMusic.volume = 0.3; // Set volume to 30%
+    originalMusicVolume = 0.3; // Store original volume
     
     // Play the music
     currentBackgroundMusic.play().catch(error => {
@@ -623,20 +1392,81 @@ function checkWaveCompletion() {
 // Function to show wave completion overlay with 3 cards
 function showWaveCompletionCards(onComplete) {
     // Pause game
-    pauseGame();
+    isGamePaused = true;
     
     // Get existing overlay elements
     const overlay = document.getElementById("wave-completion-overlay");
     const confirmButton = document.getElementById("wave-confirm-btn");
     
-    // Random header colors
-    const headerColors = ['#5f6ee7', '#4ab9a3', '#ab58a8', '#5fa1e7', '#85daeb'];
+    // Select 3 random A and B rarity cards from different types
+    const selectedCards = [];
+    const usedTypes = new Set();
     
-    // Assign random colors to card headers
-    const cardHeaders = overlay.querySelectorAll('.card-header');
-    cardHeaders.forEach((header, index) => {
-        const randomColor = headerColors[Math.floor(Math.random() * headerColors.length)];
-        header.style.background = randomColor;
+    // Get all A and B rarity cards
+    const allABCards = [];
+    Object.keys(waveRoundCardDatabase).forEach(type => {
+        const cards = waveRoundCardDatabase[type].filter(card => card.rarity === 'A' || card.rarity === 'B');
+        allABCards.push(...cards);
+    });
+    
+    // Select 3 cards from different types
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    while (selectedCards.length < 3 && attempts < maxAttempts) {
+        const randomIndex = Math.floor(Math.random() * allABCards.length);
+        const card = allABCards[randomIndex];
+        const cardType = card.id.split('_')[0];
+        
+        // Only add if type hasn't been used yet
+        if (!usedTypes.has(cardType)) {
+            selectedCards.push(card);
+            usedTypes.add(cardType);
+        }
+        attempts++;
+    }
+    
+    // If we couldn't get 3 different types, fill remaining with any available A/B cards
+    while (selectedCards.length < 3) {
+        const randomIndex = Math.floor(Math.random() * allABCards.length);
+        const card = allABCards[randomIndex];
+        
+        // Check if this card is already selected
+        const isAlreadySelected = selectedCards.some(selected => selected.id === card.id);
+        if (!isAlreadySelected) {
+            selectedCards.push(card);
+        }
+    }
+    
+    // Update existing cards with selected card information
+    const cardElements = overlay.querySelectorAll('.wave-card');
+    cardElements.forEach((cardElement, index) => {
+        if (selectedCards[index]) {
+            const card = selectedCards[index];
+            
+            // Get card type from first part of id
+            const cardType = card.id.split('_')[0];
+            const headerColor = getCardTypeColor(cardType);
+            
+            // Update card header color and text
+            const cardHeader = cardElement.querySelector('.card-header');
+            if (cardHeader) {
+                cardHeader.style.backgroundColor = headerColor;
+                cardHeader.textContent = cardType.toUpperCase();
+            }
+            
+            // Update card title
+            const cardTitle = cardElement.querySelector('.card-title');
+            if (cardTitle) cardTitle.textContent = card.name;
+            
+            // Update card description
+            const cardDescription = cardElement.querySelector('.card-text-area');
+            if (cardDescription) cardDescription.textContent = card.description;
+            
+            // Update card circle with rarity
+            const cardCircle = cardElement.querySelector('.card-circle');
+            if (cardCircle) cardCircle.textContent = card.rarity;
+        }
     });
     
     // Show overlay
@@ -646,9 +1476,20 @@ function showWaveCompletionCards(onComplete) {
     confirmButton.onclick = () => {
         // Hide overlay and resume game
         overlay.style.display = "none";
-        resumeGame();
+        isGamePaused = false;
         onComplete();
     };
+}
+
+function getCardTypeColor(cardType) {
+    switch(cardType) {
+        case 'defense': return '#4ab9a3';
+        case 'attack': return '#ab58a8';
+        case 'movement': return '#5fa1e7';
+        case 'score': return '#5f6ee7';
+        case 'skill': return '#85daeb';
+        default: return '#666666';
+    }
 }
 
 // Function to show round completion overlay with 2 cards
@@ -658,28 +1499,106 @@ function showRoundCompletionCards(onComplete) {
     
     // Get existing overlay elements
     const overlay = document.getElementById("round-completion-overlay");
-    const confirmButton = document.getElementById("round-confirm-btn");
     
-    // Random header colors
-    const headerColors = ['#5f6ee7', '#4ab9a3', '#ab58a8', '#5fa1e7', '#85daeb'];
+    // Select 2 random A and S rarity cards from different types with at least one S
+    const selectedCards = [];
+    const usedTypes = new Set();
     
-    // Assign random colors to card headers
-    const cardHeaders = overlay.querySelectorAll('.card-header');
-    cardHeaders.forEach((header, index) => {
-        const randomColor = headerColors[Math.floor(Math.random() * headerColors.length)];
-        header.style.background = randomColor;
+    // Get all A and S rarity cards
+    const allASCards = [];
+    Object.keys(waveRoundCardDatabase).forEach(type => {
+        const cards = waveRoundCardDatabase[type].filter(card => card.rarity === 'A' || card.rarity === 'S');
+        allASCards.push(...cards);
+    });
+    
+    // First, ensure at least one S card
+    const sCards = allASCards.filter(card => card.rarity === 'S');
+    let hasSCard = false;
+    
+    if (sCards.length > 0) {
+        // Select 1 random S card
+        const randomSIndex = Math.floor(Math.random() * sCards.length);
+        const sCard = sCards[randomSIndex];
+        const sCardType = sCard.id.split('_')[0];
+        
+        if (!usedTypes.has(sCardType)) {
+            selectedCards.push(sCard);
+            usedTypes.add(sCardType);
+            hasSCard = true;
+        }
+    }
+    
+    // Then select remaining A cards from different types
+    while (selectedCards.length < 2) {
+        const randomIndex = Math.floor(Math.random() * allASCards.length);
+        const card = allASCards[randomIndex];
+        const cardType = card.id.split('_')[0];
+        
+        // Only add if type hasn't been used yet and is A rarity
+        if (!usedTypes.has(cardType) && card.rarity === 'A') {
+            selectedCards.push(card);
+            usedTypes.add(cardType);
+        }
+    }
+    
+    // Store current round cards for selection reference
+    currentRoundCards = selectedCards;
+    
+    // Update existing cards with selected card information
+    const cardElements = overlay.querySelectorAll('.round-card');
+    cardElements.forEach((cardElement, index) => {
+        if (selectedCards[index]) {
+            const card = selectedCards[index];
+            
+            // Get card type from first part of id
+            const cardType = card.id.split('_')[0];
+            const headerColor = getCardTypeColor(cardType);
+            
+            // Update card header color and text
+            const cardHeader = cardElement.querySelector('.card-header');
+            if (cardHeader) {
+                cardHeader.style.backgroundColor = headerColor;
+                cardHeader.textContent = cardType.toUpperCase();
+            }
+            
+            // Update card title
+            const cardTitle = cardElement.querySelector('.card-title');
+            if (cardTitle) cardTitle.textContent = card.name;
+            
+            // Update card description
+            const cardDescription = cardElement.querySelector('.card-text-area');
+            if (cardDescription) cardDescription.textContent = card.description;
+            
+            // Update card circle with rarity
+            const cardCircle = cardElement.querySelector('.card-circle');
+            if (cardCircle) cardCircle.textContent = card.rarity;
+            
+            // Store card index on element for selection
+            cardElement.dataset.cardIndex = index;
+            
+            // Add click event to select this card
+            cardElement.onclick = () => {
+                selectRoundCard(cardElement, index);
+            };
+            
+            // Add cursor styling
+            cardElement.style.cursor = 'pointer';
+        }
     });
     
     // Show overlay
     overlay.style.display = "flex";
     
     // Set up confirm button click handler
-    confirmButton.onclick = () => {
-        // Hide overlay and resume game
-        overlay.style.display = "none";
-        resumeGame();
-        onComplete();
-    };
+    const confirmButton = document.getElementById("round-confirm-btn");
+    if (confirmButton) {
+        confirmButton.onclick = () => {
+            // Hide overlay and resume game
+            overlay.style.display = "none";
+            resumeGame();
+            onComplete();
+        };
+    }
 }
 
 function pauseGame() {
@@ -698,6 +1617,11 @@ function decreaseHeart() {
 
     // Decrease counter
     heartCounter--;
+
+    // Reset multiplier when player takes damage
+    currentMultiplier = 1.0;
+    multiplierDuration = 0;
+    updateMultiplierDisplay();
 
     // Update visual hearts
     const hearts = document.querySelectorAll("#hearts .heart");
@@ -734,7 +1658,10 @@ function checkEnemyCollisions() {
 
                 // Remove the enemy that touched the player
                 enemy.remove();
-
+                
+                // Only update score if player wasn't damaged (enemy defeated without collision)
+                // Note: Since this is collision detection, player is taking damage, so no score
+                
                 // Make player immune for 3 seconds
                 playerImmune = true;
                 player.style.opacity = "0.6"; // optional visual indicator
@@ -796,6 +1723,7 @@ const keysPressedArrow = {};
 
 // Player arrow combo will be stored in an array of directions
 let playerComboDirections = [];
+
 
 // Helper function to compare arrays
 function arraysEqual(a, b) {
@@ -891,10 +1819,16 @@ document.addEventListener("keydown", (e) => {
                     successAudio.volume = 0.4;
                     successAudio.play().catch(e => console.log("Success audio play failed:", e));
                     
+                    // Increment consecutive combo counter
+                    consecutiveComboCount++;
+                    
                     // Handle matched enemies
                     matchedEnemies.forEach(matched => {
                         // Regular enemy - remove immediately
                         matched.enemyElement.remove();
+                        
+                        // Update score when enemy is defeated
+                        defeatEnemy();
                         
                         // Remove from enemyCombos array
                         const index = enemyCombos.findIndex(ec => ec.enemyElement === matched.enemyElement);
@@ -910,6 +1844,15 @@ document.addEventListener("keydown", (e) => {
                     const failureAudio = new Audio("audioAssets/jingles_NES10.ogg");
                     failureAudio.volume = 0.4;
                     failureAudio.play().catch(e => console.log("Failure audio play failed:", e));
+                    
+                    // Reset consecutive combo counter on wrong combo
+                    consecutiveComboCount = 0;
+                    
+                    // Reset multiplier when wrong combo is entered
+                    currentMultiplier = 1.0;
+                    multiplierDuration = 0;
+                    updateMultiplierDisplay();
+                    updateComboDisplay();
                 }
             }
             
@@ -937,9 +1880,10 @@ function togglePause() {
         // Show pause overlay
         pauseOverlay.style.display = 'flex';
         
-        // Pause background music
+        // Store original volume and lower background music volume by 70% (keep 30% volume)
         if (currentBackgroundMusic) {
-            currentBackgroundMusic.pause();
+            originalMusicVolume = currentBackgroundMusic.volume;
+            currentBackgroundMusic.volume = originalMusicVolume * 0.3;
         }
         
         // Stop all game loops and animations
@@ -957,11 +1901,9 @@ function togglePause() {
         // Hide pause overlay
         pauseOverlay.style.display = 'none';
         
-        // Resume background music
+        // Restore background music volume
         if (currentBackgroundMusic) {
-            currentBackgroundMusic.play().catch(error => {
-                console.log("Background music resume failed:", error);
-            });
+            currentBackgroundMusic.volume = originalMusicVolume;
         }
         
         // Resume game loops and animations
@@ -997,12 +1939,11 @@ document.addEventListener('DOMContentLoaded', function() {
         continueBtn.addEventListener('click', togglePause);
     }
     
-    // Card Archive button (placeholder functionality)
+    // Card Archive button functionality
     const cardArchiveBtn = document.getElementById('card-archive-btn');
     if (cardArchiveBtn) {
         cardArchiveBtn.addEventListener('click', function() {
-            console.log('Card Archive clicked - functionality to be implemented');
-            // Could show card archive overlay here
+            showCardArchive();
         });
     }
     
@@ -1033,8 +1974,10 @@ document.addEventListener('DOMContentLoaded', function() {
         musicVolumeSlider.addEventListener('input', function() {
             const value = this.value;
             musicVolumeValue.textContent = value + '%';
+            const newVolume = value / 100;
             if (currentBackgroundMusic) {
-                currentBackgroundMusic.volume = value / 100;
+                currentBackgroundMusic.volume = newVolume;
+                originalMusicVolume = newVolume; // Update original volume for pause system
             }
         });
     }
@@ -1062,6 +2005,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize SFX volume
     window.sfxVolume = 0.4;
+    
+    // Card Archive overlay event listeners
+    const cardArchiveCloseBtn = document.getElementById('card-archive-close-btn');
+    if (cardArchiveCloseBtn) {
+        cardArchiveCloseBtn.addEventListener('click', hideCardArchive);
+    }
+    
+    // Card type selection listeners
+    const cardTypeButtons = document.querySelectorAll('.card-type');
+    cardTypeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const type = this.dataset.type;
+            loadCardType(type);
+        });
+    });
 });
 
 function initializeKeybinds() {
