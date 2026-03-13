@@ -1320,6 +1320,11 @@ function checkEnemyCollisions() {
     enemies.forEach(enemy => {
         if (isColliding(player, enemy)) {
             if (!playerImmune) {
+                // Play collision impact sound
+                const impactAudio = new Audio("audioAssets/game-fx-8-bit-chiptune-impact-03.wav");
+                impactAudio.volume = 0.5;
+                impactAudio.play().catch(e => console.log("Impact audio play failed:", e));
+                
                 // Player hit: decrease heart
                 decreaseHeart();
 
@@ -1379,10 +1384,10 @@ const arrowKeyMap = {
 
 // Map arrow keys to audio files
 const arrowAudioMap = {
-    "arrowup": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-01.wav",
-    "arrowdown": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-02.wav",
-    "arrowleft": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-03.wav",
-    "arrowright": "audioAssets/arrow/game-fx-8-bit-chiptune-noise-beep-04.wav"
+    "arrowup": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-high-01.wav",
+    "arrowdown": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-high-04.wav",
+    "arrowleft": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-low-01.wav",
+    "arrowright": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-low-04.wav"
 };
 
 // Track which keys are currently pressed
@@ -1481,8 +1486,8 @@ document.addEventListener("keydown", (e) => {
                 
                 // Play appropriate audio based on match result
                 if (matchedEnemies.length > 0) {
-                    // Success - play jingle_NES09.ogg
-                    const successAudio = new Audio("audioAssets/jingles_NES09.ogg");
+                    // Success - play jump sound
+                    const successAudio = new Audio("audioAssets/game-fx-8-bit-chiptune-jump-06.wav");
                     successAudio.volume = 0.4;
                     successAudio.play().catch(e => console.log("Success audio play failed:", e));
                     
@@ -1507,8 +1512,8 @@ document.addEventListener("keydown", (e) => {
                     // Check if wave is complete after defeating enemies
                     checkWaveCompletion();
                 } else {
-                    // Failure - play jingles_NES10.ogg
-                    const failureAudio = new Audio("audioAssets/jingles_NES10.ogg");
+                    // Failure - play vibrato sound
+                    const failureAudio = new Audio("audioAssets/game-fx-8-bit-chiptune-vibrato-01.wav");
                     failureAudio.volume = 0.4;
                     failureAudio.play().catch(e => console.log("Failure audio play failed:", e));
                     
