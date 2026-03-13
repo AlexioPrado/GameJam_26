@@ -87,55 +87,63 @@ let customKeybinds = { ...defaultKeybinds };
 let editingKeybind = null;
 
 // CARD SELECTION SYSTEM
-// Get wave cards by ID
-const waveCard1 = document.getElementById('wave-card-1');
-const waveCard2 = document.getElementById('wave-card-2');
-const waveCard3 = document.getElementById('wave-card-3');
 
-// Get round cards by ID
-const roundCard1 = document.getElementById('round-card-1');
-const roundCard2 = document.getElementById('round-card-2');
+    // Get wave cards by ID
+    const waveCard1 = document.getElementById('wave-card-1');
+    const waveCard2 = document.getElementById('wave-card-2');
+    const waveCard3 = document.getElementById('wave-card-3');
 
-// Store selected cards
-let selectedWaveCard = null;
-let selectedRoundCard = null;
+    // Get round cards by ID
+    const roundCard1 = document.getElementById('round-card-1');
+    const roundCard2 = document.getElementById('round-card-2');
 
-// Card inventory system
-const cardInventory = {};
+    
 
-// Store current displayed cards for reference
-let currentWaveCards = [];
-let currentRoundCards = [];
+    // Add individual event listeners to wave cards
 
-// Centralized card selection handler
-function createCardSelectionHandler(cardElement, isWaveCard) {
-    return () => {
-        const cardIndex = parseInt(cardElement.dataset.cardIndex);
-        if (!isNaN(cardIndex)) {
-            if (isWaveCard) {
-                selectWaveCard(cardElement, cardIndex);
-            } else {
-                selectRoundCard(cardElement, cardIndex);
+    
+
+    // Add individual event listeners to round cards
+    // roundCard1.addEventListener('click', createCardSelectionHandler(roundCard1, false));
+    // roundCard2.addEventListener('click', createCardSelectionHandler(roundCard2, false));
+
+    // Add round confirm button functionality
+    const roundConfirmBtn = document.getElementById('round-confirm-btn');
+    if (roundConfirmBtn) {
+        roundConfirmBtn.addEventListener('click', function() {
+            // Hide round completion overlay
+            const roundCompletionOverlay = document.getElementById('round-completion-overlay');
+            if (roundCompletionOverlay) {
+                roundCompletionOverlay.style.display = 'none';
             }
-        }
-    };
-}
-
-// Add event listeners to wave cards
-const waveCards = [waveCard1, waveCard2, waveCard3];
-waveCards.forEach(card => {
-    if (card) {
-        card.addEventListener('click', createCardSelectionHandler(card, true));
+            
+            // After wave 3 completion, start new round
+            if (currentWave >= maxWavesPerRound) {
+                // Advance to next round
+                nextRound();
+                
+                // Spawn enemies for the new round's first wave
+                spawnEnemiesForWave(currentRound, 1);
+            }
+            
+            // Resume game
+            isGamePaused = false;
+        });
     }
-});
 
-// Add event listeners to round cards
-const roundCards = [roundCard1, roundCard2];
-roundCards.forEach(card => {
-    if (card) {
-        card.addEventListener('click', createCardSelectionHandler(card, false));
+    // Add continue button functionality
+    const continueBtn = document.getElementById('continue-btn');
+    if (continueBtn) {
+        continueBtn.addEventListener('click', function() {
+            // Hide pause overlay
+            const pauseOverlay = document.getElementById('pause-overlay');
+            if (pauseOverlay) {
+                pauseOverlay.style.display = 'none';
+            }
+            // Resume game
+            isGamePaused = false;
+        });
     }
-});
 
 // Card creation utilities
 function createCardElement(card, index, isWaveCard) {
@@ -169,15 +177,7 @@ function createCardElement(card, index, isWaveCard) {
     cardContainer.appendChild(cardContent);
     cardContainer.appendChild(cardCircle);
     
-    // Add click event
-    cardContainer.onclick = () => {
-        if (isWaveCard) {
-            selectWaveCard(cardContainer, index);
-        } else {
-            selectRoundCard(cardContainer, index);
-        }
-    };
-    
+        
     // Add cursor styling
     cardContainer.style.cursor = 'pointer';
     
@@ -205,10 +205,8 @@ function updateExistingCardElement(cardElement, card, index) {
     const cardCircle = cardElement.querySelector('.card-circle');
     if (cardCircle) cardCircle.textContent = card.rarity;
     
-    // Store index and add click handler
+    // Store index
     cardElement.dataset.cardIndex = index;
-    cardElement.onclick = () => selectRoundCard(cardElement, index);
-    cardElement.style.cursor = 'pointer';
 }
 
 // Random card selection utilities
@@ -294,215 +292,6 @@ const waveRoundCardDatabase = {
     ]
 };
 
-const cardDatabase = {
-    defense: [
-        // ... rest of the code remains the same ...
-        {
-            id: 'defense_shield',
-            name: 'Shield Barrier'
-        },
-        {
-            id: 'defense_armor',
-            name: 'Armor Plating'
-        },
-        {
-            id: 'defensive_field',
-            name: 'Force Field'
-        },
-        {
-            id: 'defense_repair',
-            name: 'Repair Drone'
-        },
-        {
-            id: 'defense_fortify',
-            name: 'Fortify Position'
-        },
-        {
-            id: 'defense_absorb',
-            name: 'Energy Absorb'
-        },
-        {
-            id: 'defense_counter',
-            name: 'Counter Attack'
-        },
-        {
-            id: 'defense_barrier',
-            name: 'Defensive Wall'
-        },
-        {
-            id: 'defense_guardian',
-            name: 'Guardian Shield'
-        },
-        {
-            id: 'defense_sanctuary',
-            name: 'Sanctuary Ward'
-        },
-        {
-            id: 'defense_aegis',
-            name: 'Aegis Defense'
-        }
-    ],
-    attack: [
-        {
-            id: 'attack_laser',
-            name: 'Laser Beam'
-        },
-        {
-            id: 'attack_missile',
-            name: 'Homing Missile'
-        },
-        {
-            id: 'attack_blast',
-            name: 'Explosive Blast'
-        },
-        {
-            id: 'attack_chain',
-            name: 'Chain Lightning'
-        },
-        {
-            id: 'attack_volley',
-            name: 'Arrow Volley'
-        },
-        {
-            id: 'attack_bombard',
-            name: 'Bombardment'
-        },
-        {
-            id: 'assault_strike',
-            name: 'Assault Strike'
-        },
-        {
-            id: 'attack_flurry',
-            name: 'Blade Flurry'
-        },
-        {
-            id: 'attack_onslaught',
-            name: 'Onslaught Wave'
-        },
-        {
-            id: 'attack_devastate',
-            name: 'Devastating Blow'
-        }
-    ],
-    movement: [
-        {
-            id: 'movement_dash',
-            name: 'Quick Dash'
-        },
-        {
-            id: 'movement_teleport',
-            name: 'Phase Shift'
-        },
-        {
-            id: 'movement_blink',
-            name: 'Blink Step'
-        },
-        {
-            id: 'movement_gravity',
-            name: 'Gravity Well'
-        },
-        {
-            id: 'movement_speed',
-            name: 'Speed Boost'
-        },
-        {
-            id: 'movement_flight',
-            name: 'Flight Mode'
-        },
-        {
-            id: 'movement_portal',
-            name: 'Portal Jump'
-        },
-        {
-            id: 'movement_echo',
-            name: 'Echo Step'
-        }
-    ],
-    score: [
-        {
-            id: 'score_double',
-            name: 'Double Points'
-        },
-        {
-            id: 'score_multiplier',
-            name: 'Score Multiplier'
-        },
-        {
-            id: 'score_bonus',
-            name: 'Combo Bonus'
-        },
-        {
-            id: 'score_perfect',
-            name: 'Perfect Clear'
-        },
-        {
-            id: 'score_chain',
-            name: 'Score Chain'
-        },
-        {
-            id: 'score_mega',
-            name: 'Mega Points'
-        },
-        {
-            id: 'score_ultimate',
-            name: 'Ultimate Score'
-        },
-        {
-            id: 'score_cascade',
-            name: 'Point Cascade'
-        },
-        {
-            id: 'score_infinite',
-            name: 'Infinite Score'
-        },
-        {
-            id: 'score_legendary',
-            name: 'Legendary Bonus'
-        }
-    ],
-    skill: [
-        {
-            id: 'skill_time_slow',
-            name: 'Time Dilation'
-        },
-        {
-            id: 'skill_freeze',
-            name: 'Enemy Freeze'
-        },
-        {
-            id: 'skill_pattern_master',
-            name: 'Pattern Master'
-        },
-        {
-            id: 'skill_precision',
-            name: 'Precision Mode'
-        },
-        {
-            id: 'skill_reflex',
-            name: 'Reflex Boost'
-        },
-        {
-            id: 'skill_focus',
-            name: 'Laser Focus'
-        },
-        {
-            id: 'skill_instinct',
-            name: 'Battle Instinct'
-        },
-        {
-            id: 'skill_zen',
-            name: 'Zen State'
-        },
-        {
-            id: 'skill_awakening',
-            name: 'Power Awakening'
-        },
-        {
-            id: 'skill_transcend',
-            name: 'Transcend Mode'
-        }
-    ]
-};
 
 function showWaveCompletion() {
     const waveCompletionOverlay = document.getElementById('wave-completion-overlay');
@@ -513,7 +302,6 @@ function showWaveCompletion() {
     
     // Select 3 random cards
     const selectedCards = selectRandomCards(allCards, 3);
-    currentWaveCards = selectedCards;
     
     // Display cards using utility function
     const cardList = waveCompletionOverlay.querySelector('.cards-container');
@@ -525,7 +313,7 @@ function showWaveCompletion() {
     });
 }
 
-function getCardTypeColor(rarity) {
+function getRarityColor(rarity) {
     switch(rarity) {
         case 'S': return '#FFD700'; // Gold
         case 'A': return '#C0C0C0'; // Blue  
@@ -534,41 +322,6 @@ function getCardTypeColor(rarity) {
     }
 }
 
-function showRoundCompletionCards(onComplete) {
-    pauseGame();
-    
-    const overlay = document.getElementById("round-completion-overlay");
-    
-    // Get all A and S rarity cards
-    const allASCards = Object.values(waveRoundCardDatabase)
-        .flat()
-        .filter(card => card.rarity === 'A' || card.rarity === 'S');
-    
-    // Select 2 cards from different types with at least one S
-    const selectedCards = selectRandomCards(allASCards, 2, true);
-    currentRoundCards = selectedCards;
-    
-    // Update existing card elements
-    const cardElements = overlay.querySelectorAll('.round-card');
-    cardElements.forEach((cardElement, index) => {
-        if (selectedCards[index]) {
-            updateExistingCardElement(cardElement, selectedCards[index], index);
-        }
-    });
-    
-    // Show overlay
-    overlay.style.display = "flex";
-    
-    // Set up confirm button
-    const confirmButton = document.getElementById("round-confirm-btn");
-    if (confirmButton) {
-        confirmButton.onclick = () => {
-            overlay.style.display = "none";
-            resumeGame();
-            onComplete();
-        };
-    }
-}
 
 
 function hideWaveCompletion() {
@@ -581,66 +334,6 @@ function hideRoundCompletion() {
     roundCompletionOverlay.style.display = 'none';
 }
 
-// Centralized card selection logic
-function selectCard(cardElement, cardIndex, isWaveCard) {
-    const currentCards = isWaveCard ? currentWaveCards : currentRoundCards;
-    const selectedCardRef = isWaveCard ? 'selectedWaveCard' : 'selectedRoundCard';
-    const selectedCard = isWaveCard ? selectedWaveCard : selectedRoundCard;
-    const cardType = isWaveCard ? 'wave' : 'round';
-    
-    // If this card is already selected, deselect it
-    if (selectedCard === cardElement) {
-        cardElement.style.border = '';
-        cardElement.style.boxShadow = '';
-        if (isWaveCard) selectedWaveCard = null;
-        else selectedRoundCard = null;
-        console.log(`Deselected ${cardType} card:`, cardElement.id);
-        return;
-    }
-    
-    // Deselect previously selected card if any
-    if (selectedCard) {
-        selectedCard.style.border = '';
-        selectedCard.style.boxShadow = '';
-    }
-    
-    // Select the new card
-    cardElement.style.border = '3px solid #00ff00';
-    cardElement.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.5)';
-    if (isWaveCard) selectedWaveCard = cardElement;
-    else selectedRoundCard = cardElement;
-    
-    // Get the card data and add to inventory
-    const selectedCardData = currentCards[cardIndex];
-    if (selectedCardData) {
-        console.log(`Selected ${cardType} card data:`, selectedCardData);
-        
-        // Add card to inventory
-        cardInventory[selectedCardData.id] = selectedCardData;
-        console.log(`Added card ${selectedCardData.id} to inventory`);
-        console.log('Current inventory:', Object.keys(cardInventory));
-        console.log('Inventory contents:', cardInventory);
-        
-        // Remove card from database
-        const cardTypeFromId = selectedCardData.id.split('_')[0];
-        const typeArray = waveRoundCardDatabase[cardTypeFromId];
-        if (typeArray) {
-            const cardIndexInDatabase = typeArray.findIndex(card => card.id === selectedCardData.id);
-            if (cardIndexInDatabase !== -1) {
-                typeArray.splice(cardIndexInDatabase, 1);
-                console.log(`Removed card ${selectedCardData.id} from database`);
-            }
-        }
-    }
-}
-
-function selectWaveCard(cardElement, cardIndex) {
-    selectCard(cardElement, cardIndex, true);
-}
-
-function selectRoundCard(cardElement, cardIndex) {
-    selectCard(cardElement, cardIndex, false);
-}
 
 function showCardArchive() {
     const cardArchiveOverlay = document.getElementById('card-archive-overlay');
@@ -668,29 +361,46 @@ function loadCardType(type) {
     currentCardType = type;
     selectedCard = null;
     
-    // Update active card type button
+    // Update active button styling
     document.querySelectorAll('.card-type').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.dataset.type === type) {
-            btn.classList.add('active');
-        }
     });
+    document.querySelector(`[data-type="${type}"]`).classList.add('active');
     
-    // Clear and populate card list with card-style layout
+    // Clear and populate card container with cards
     const cardList = document.getElementById('card-list');
     cardList.innerHTML = '';
     
-    const cards = cardDatabase[type] || [];
-    cards.forEach(card => {
-        // Create card container like wave/round cards
+    // Get cards from waveRoundCardDatabase
+    const cards = waveRoundCardDatabase[type] || [];
+    
+    // Display card count as absolute positioned
+    const countDisplay = document.createElement('div');
+    countDisplay.className = 'card-count';
+    countDisplay.textContent = `${cards.length} cards in ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+    countDisplay.style.position = 'absolute';
+    countDisplay.style.top = '0';
+    countDisplay.style.left = '0';
+    countDisplay.style.right = '0';
+    countDisplay.style.textAlign = 'center';
+    countDisplay.style.color = '#ccc';
+    countDisplay.style.fontSize = '1.2em';
+    countDisplay.style.padding = '10px';
+    countDisplay.style.background = 'rgba(0, 0, 0, 0.5)';
+    countDisplay.style.zIndex = '10';
+    cardList.appendChild(countDisplay);
+    
+    // Create card elements for each card
+    cards.forEach((card, index) => {
         const cardContainer = document.createElement('div');
-        cardContainer.className = `card-item ${type}-type`;
+        cardContainer.className = `archive-card ${card.rarity.toLowerCase()}-rarity`;
         cardContainer.dataset.cardId = card.id;
         
-        // Create card structure similar to wave/round cards
+        // Create card structure similar to game cards
         const cardHeader = document.createElement('div');
         cardHeader.className = 'card-header';
-        // Remove text from header - just a colored bar
+        cardHeader.textContent = type.toUpperCase();
+        cardHeader.style.backgroundColor = getCardTypeColor(type);
         
         const cardContent = document.createElement('div');
         cardContent.className = 'card-content';
@@ -699,60 +409,37 @@ function loadCardType(type) {
         cardTitle.className = 'card-title';
         cardTitle.textContent = card.name;
         
+        const cardDescription = document.createElement('div');
+        cardDescription.className = 'card-text-area';
+        cardDescription.textContent = card.description;
+        
+        const cardCircle = document.createElement('div');
+        cardCircle.className = 'card-circle';
+        cardCircle.textContent = card.rarity;
+        
         // Assemble card
         cardContent.appendChild(cardTitle);
+        cardContent.appendChild(cardDescription);
         cardContainer.appendChild(cardHeader);
         cardContainer.appendChild(cardContent);
-        
-        cardContainer.addEventListener('click', () => selectCard(card));
+        cardContainer.appendChild(cardCircle);
         
         cardList.appendChild(cardContainer);
     });
     
-    // Clear card details
-    updateCardDetails(null);
-}
+    }
 
 function selectCard(card) {
     selectedCard = card;
-    
+
     // Update selected card visual
-    document.querySelectorAll('.card-item').forEach(item => {
-        item.classList.remove('selected');
-        if (item.dataset.cardId === card.id) {
-            item.classList.add('selected');
-        }
+    document.querySelectorAll('.wave-card, .round-card').forEach(item => {
+        item.style.border = '';
+        item.style.boxShadow = '';
     });
     
-    // Update card details
-    updateCardDetails(card);
-}
-
-function updateCardDetails(card) {
-    const cardDetails = document.getElementById('card-details');
-    
-    if (!card) {
-        cardDetails.innerHTML = `
-            <div class="no-card-selected">
-                <p>Select a card to view its details</p>
-            </div>
-        `;
-        return;
     }
-    
-    cardDetails.innerHTML = `
-        <div class="card-detail-content">
-            <h4>${card.name}</h4>
-            <div class="card-description">
-                <strong>Description:</strong> ${card.description}
-            </div>
-            <div class="card-functionality">
-                <h5>Functionality:</h5>
-                <p>${card.functionality}</p>
-            </div>
-        </div>
-    `;
-}
+
 
 // BACKGROUND MUSIC SYSTEM
 const backgroundMusicFiles = [
@@ -773,9 +460,36 @@ const MULTIPLIER_DURATION = 4000; // 4 seconds in milliseconds
 const MULTIPLIER_INCREMENT = 0.5;
 const MAX_MULTIPLIER = 3.0;
 
+// Update and store high score in localStorage
+function updateAndStoreScore(points) {
+    totalScore += Math.floor(points * currentMultiplier);
+    document.getElementById('score-total').textContent = totalScore;
+    
+    // Update high score in localStorage
+    const storedHighScore = parseInt(localStorage.getItem('finalScore')) || 0;
+    if (totalScore > storedHighScore) {
+        localStorage.setItem('finalScore', totalScore);
+    }
+}
+
+// Update and store highest combo in localStorage
+function updateAndStoreCombo() {
+    // Update high combo in localStorage
+    const storedHighCombo = parseInt(localStorage.getItem('highestCombo')) || 0;
+    if (consecutiveComboCount > storedHighCombo) {
+        localStorage.setItem('highestCombo', consecutiveComboCount);
+    }
+}
+
 function updateScore(points) {
     totalScore += Math.floor(points * currentMultiplier);
     document.getElementById('score-total').textContent = totalScore;
+    
+    // Update high score in localStorage
+    const storedHighScore = parseInt(localStorage.getItem('finalScore')) || 0;
+    if (totalScore > storedHighScore) {
+        localStorage.setItem('finalScore', totalScore);
+    }
 }
 
 function increaseMultiplier() {
@@ -815,6 +529,9 @@ function updateComboDisplay() {
     if (comboCounter) {
         comboCounter.textContent = `Combo: ${consecutiveComboCount}`;
     }
+    
+    // Update high combo in localStorage
+    updateAndStoreCombo();
 }
 
 function defeatEnemy() {
@@ -835,9 +552,10 @@ function defeatEnemy() {
         }
     });
     
-    updateScore(BASE_SCORE * scoreMultiplier);
+    updateAndStoreScore(BASE_SCORE * scoreMultiplier);
     increaseMultiplier();
     updateComboDisplay();
+    updateAndStoreCombo();
 }
 
 // Main game loop
@@ -862,31 +580,27 @@ function gameLoop(currentTime) {
 // Start the game loop
 requestAnimationFrame(gameLoop);
 
-function playRandomBackgroundMusic() {
-    // Stop current music if playing
-    if (currentBackgroundMusic) {
-        currentBackgroundMusic.pause();
-        currentBackgroundMusic = null;
+
+// Initialize high scores from localStorage
+function initializeHighScores() {
+    // Get stored high scores or set defaults
+    const storedHighScore = localStorage.getItem('finalScore');
+    const storedHighCombo = localStorage.getItem('highestCombo');
+    
+    // Initialize if not found
+    if (!storedHighScore) {
+        localStorage.setItem('finalScore', '0');
     }
-    
-    // Select random music file
-    const randomIndex = Math.floor(Math.random() * backgroundMusicFiles.length);
-    const selectedMusic = backgroundMusicFiles[randomIndex];
-    
-    // Create new audio element
-    currentBackgroundMusic = new Audio(selectedMusic);
-    currentBackgroundMusic.loop = true;
-    currentBackgroundMusic.volume = 0.3; // Set volume to 30%
-    originalMusicVolume = 0.3; // Store original volume
-    
-    // Play the music
-    currentBackgroundMusic.play().catch(error => {
-        console.log("Background music play failed:", error);
-    });
+    if (!storedHighCombo) {
+        localStorage.setItem('highestCombo', '0');
+    }
 }
 
 // Initialize background music when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize high scores
+    initializeHighScores();
+    
     // Wait for user interaction before playing audio (browser requirement)
     document.addEventListener('click', function initAudio() {
         playRandomBackgroundMusic();
@@ -1078,23 +792,6 @@ function getRandomEdgePosition(enemyWidth = 60, enemyHeight = 60) {
     return {x, y};
 }
 
-// Function to calculate number of enemies for a wave
-function calculateEnemies(round, wave) {
-    // Wave 1 scales with 0.3 multiplier per round
-    let wave1Enemies = Math.round(6 * (1 + 0.3 * (round - 1)));
-
-    let enemiesForThisWave;
-    if (wave === 1) {
-        enemiesForThisWave = wave1Enemies;
-    } else if (wave >= 2 && wave <= 3) {
-        // Subsequent waves increment by +2 from wave 1
-        enemiesForThisWave = wave1Enemies + 2 * (wave - 1);
-    } else {
-        enemiesForThisWave = wave1Enemies + 4; // default for waves beyond 3
-    }
-
-    return enemiesForThisWave;
-}
 
 // ------------------------
 // ENEMY COMBO STORAGE
@@ -1306,17 +1003,6 @@ moveEnemiesTowardPlayer();
 // DYNAMIC PROGRESS BAR & WAVE/ROUND COUNTERS
 // ------------------------
 
-// Function to update progress bar and counters dynamically
-function updateProgress() {
-    roundWave.innerHTML = `Round: ${currentRound} | Wave: ${currentWave}`;
-
-    // Progress fills proportionally (1/3 per wave)
-    const progress = (currentWave / maxWavesPerRound) * 100;
-    progressBar.style.width = `${progress}%`;
-}
-
-// Initialize counters and progress bar
-updateProgress();
 
 // ------------------------
 // ROUND AND WAVE MANAGEMENT FUNCTIONS (do not increment yet)
@@ -1332,14 +1018,14 @@ function nextWave() {
         // currentRound++; // Do not increment yet
     }
 
-    updateProgress(); // dynamically update progress bar and counters
+    updateProgressBar(currentRound, currentWave); // dynamically update progress bar and counters
 }
 
 // Advance to the next round
 function nextRound() {
     currentRound++;
     currentWave = 1;
-    updateProgress();
+    updateProgressBar(currentRound, currentWave);
 }
 
 // ------------------------
@@ -1541,9 +1227,7 @@ function showRoundCompletionCards(onComplete) {
         }
     }
     
-    // Store current round cards for selection reference
-    currentRoundCards = selectedCards;
-    
+        
     // Update existing cards with selected card information
     const cardElements = overlay.querySelectorAll('.round-card');
     cardElements.forEach((cardElement, index) => {
@@ -1576,30 +1260,13 @@ function showRoundCompletionCards(onComplete) {
             // Store card index on element for selection
             cardElement.dataset.cardIndex = index;
             
-            // Add click event to select this card
-            cardElement.onclick = () => {
-                selectRoundCard(cardElement, index);
-            };
-            
-            // Add cursor styling
-            cardElement.style.cursor = 'pointer';
-        }
+                    }
     });
     
     // Show overlay
     overlay.style.display = "flex";
     
-    // Set up confirm button click handler
-    const confirmButton = document.getElementById("round-confirm-btn");
-    if (confirmButton) {
-        confirmButton.onclick = () => {
-            // Hide overlay and resume game
-            overlay.style.display = "none";
-            resumeGame();
-            onComplete();
-        };
     }
-}
 
 function pauseGame() {
     isGamePaused = true;
@@ -1867,16 +1534,14 @@ document.addEventListener("keydown", (e) => {
 });
 
 // PAUSE SYSTEM
-let isPaused = false;
 let gameLoops = [];
 let enemyMovements = [];
 
 function togglePause() {
-    isPaused = !isPaused;
-    isGamePaused = isPaused; // Sync with existing pause variable
+    isGamePaused = !isGamePaused;
     const pauseOverlay = document.getElementById('pause-overlay');
     
-    if (isPaused) {
+    if (isGamePaused) {
         // Show pause overlay
         pauseOverlay.style.display = 'flex';
         
@@ -1907,15 +1572,10 @@ function togglePause() {
         }
         
         // Resume game loops and animations
-        resumeGameLoops();
         resumeEnemyMovements();
     }
 }
 
-function resumeGameLoops() {
-    // Restart any game loops that were running
-    // This would need to be implemented based on your specific game loops
-}
 
 function resumeEnemyMovements() {
     // Resume enemy movements
@@ -1933,12 +1593,7 @@ document.addEventListener('DOMContentLoaded', function() {
         pauseButton.addEventListener('click', togglePause);
     }
     
-    // Continue button event listener
-    const continueBtn = document.getElementById('continue-btn');
-    if (continueBtn) {
-        continueBtn.addEventListener('click', togglePause);
-    }
-    
+        
     // Card Archive button functionality
     const cardArchiveBtn = document.getElementById('card-archive-btn');
     if (cardArchiveBtn) {
@@ -2099,9 +1754,7 @@ function captureNewKey(e) {
         const keyElement = document.querySelector(`[data-action="${editingKeybind}"]`);
         keyElement.textContent = formatKeyDisplay(key);
         
-        // Update game controls
-        updateGameControls();
-        
+                
         cancelKeybindEdit();
     }
 }
@@ -2120,10 +1773,6 @@ function cancelKeybindEdit() {
     }
 }
 
-function updateGameControls() {
-    // This function will be called to update the game's control mappings
-    // The actual game logic will need to reference customKeybinds instead of hardcoded keys
-}
 
 // Initialize keybind system
 document.addEventListener('DOMContentLoaded', function() {
