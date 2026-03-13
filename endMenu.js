@@ -65,12 +65,22 @@ document.addEventListener('DOMContentLoaded', function() {
         finalScoreElement.textContent = gameData.finalScore.toLocaleString();
         // Animate the score counting up
         animateScore(finalScoreElement, gameData.finalScore);
+        
+        // Reset final score to 0 after displaying
+        setTimeout(() => {
+            localStorage.setItem('finalScore', '0');
+        }, 2500); // Reset after animation completes
     }
     
     if (highestComboElement) {
         highestComboElement.textContent = gameData.highestCombo;
         // Animate the combo display
         animateCombo(highestComboElement, gameData.highestCombo);
+        
+        // Reset highest combo to 0 after displaying
+        setTimeout(() => {
+            localStorage.setItem('highestCombo', '0');
+        }, 2000); // Reset after animation completes
     }
     
     // Add event listeners to buttons
