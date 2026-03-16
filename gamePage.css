@@ -403,7 +403,7 @@ body {
     color: white;
     padding: 1px;
     border-radius: 4px 4px 0 0;
-    font-size: 0.5em;
+    font-size: 1em;
     margin-bottom: 0;
 }
 
@@ -1130,6 +1130,201 @@ body {
     color: #ccc;
     font-size: 1.1em;
     line-height: 1.6;
+}
+
+/* Card Categories Styling */
+.card-category {
+    margin-bottom: 30px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.card-category h3 {
+    font-size: 1.3em;
+    margin: 0 0 15px 0;
+    color: white;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    padding: 10px 15px;
+    border-radius: 6px;
+    border-bottom: none;
+}
+
+/* Card Type Background Colors - matching getCardTypeColor function */
+.card-category.defense h3 {
+    background: #4ab9a3;
+}
+
+.card-category.attack h3 {
+    background: #ab58a8;
+}
+
+.card-category.movement h3 {
+    background: #5fa1e7;
+}
+
+.card-category.score h3 {
+    background: #5f6ee7;
+}
+
+.card-category.skill h3 {
+    background: #85daeb;
+}
+
+.card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: -10px;
+}
+
+.card-item {
+    border-radius: 8px;
+    border: 2px solid;
+    background: rgba(255, 255, 255, 0.02);
+    transition: all 0.2s ease;
+    height: 210px;
+    display: flex;
+    flex-direction: column;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    width: calc(25% - 20px);
+    margin: 10px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 10px 12px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.4em;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.card-content {
+    padding: 12px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.card-content p {
+    margin: 8px 0;
+    font-size: 1.1em;
+    color: white;
+    line-height: 1.4;
+    flex-grow: 1;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Card Type Header Colors */
+.card-item.defense .card-header {
+    background: #4ab9a3;
+}
+
+.card-item.attack .card-header {
+    background: #ab58a8;
+}
+
+.card-item.movement .card-header {
+    background: #5fa1e7;
+}
+
+.card-item.score .card-header {
+    background: #5f6ee7;
+}
+
+.card-item.skill .card-header {
+    background: #85daeb;
+}
+
+.card-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.card-item strong {
+    display: block;
+    font-size: 1em;
+    margin-bottom: 8px;
+    line-height: 1.2;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .card-item {
+        width: calc(33.333% - 20px);
+        height: 210px;
+    }
+}
+
+@media (max-width: 900px) {
+    .card-item {
+        width: calc(50% - 20px);
+        height: 210px;
+    }
+}
+
+@media (max-width: 600px) {
+    .card-item {
+        width: calc(100% - 20px);
+        margin: 10px 10px;
+        height: 180px;
+    }
+    
+    .card-item {
+        padding: 12px;
+    }
+    
+    .card-item strong {
+        font-size: 0.9em;
+    }
+    
+    .card-item p {
+        font-size: 0.8em;
+    }
+}
+
+/* Rarity Colors - Using game's getRarityColor function values */
+.s-rarity {
+    border-color: #FFD700; /* Gold */
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.s-rarity strong {
+    color: #FFD700;
+    text-shadow: 0 0 3px rgba(255, 215, 0, 0.3);
+}
+
+.a-rarity {
+    border-color: #9b59b6; /* Purple */
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.1) 0%, rgba(155, 89, 182, 0.05) 100%);
+}
+
+.a-rarity strong {
+    color: #9b59b6;
+    text-shadow: 0 0 3px rgba(155, 89, 182, 0.3);
+}
+
+.b-rarity {
+    border-color: #3498db; /* Blue */
+    background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(52, 152, 219, 0.05) 100%);
+}
+
+.b-rarity strong {
+    color: #3498db;
+    text-shadow: 0 0 3px rgba(52, 152, 219, 0.3);
 }
 
 .settings-content-area p, .help-content-area p {

@@ -356,7 +356,290 @@
                 <div class="help-section hidden" id="cards-section">
                     <h2>Cards</h2>
                     <div class="help-content-area">
-                        <!-- Cards information will be added here -->
+                        <p><strong>Card Types & Rarity System:</strong></p>
+                        <p>Cards are organized by type and rarity. Higher rarity cards (S > A > B) provide more powerful effects!</p>
+                        
+                        <div class="card-category attack">
+                            <h3>ATTACK CARDS</h3>
+                            <div class="card-grid">
+                                <div class="card-item s-rarity attack">
+                                    <div class="card-header">Consecutive Combo II</div>
+                                    <div class="card-content">
+                                        <p>For every 3 consecutive combos, reduce all enemy combo lengths by 2.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item s-rarity attack">
+                                    <div class="card-header">Twin Telepathy</div>
+                                    <div class="card-content">
+                                        <p>When defeating an enemy, 30% chance giving two enemies on the field to have the same combo.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity attack">
+                                    <div class="card-header">Minimum Combo</div>
+                                    <div class="card-content">
+                                        <p>When defeating an enemy, 20% chance of an enemy on the field to have their combo reduced to minimum combo length.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity attack">
+                                    <div class="card-header">Consecutive Combo I</div>
+                                    <div class="card-content">
+                                        <p>For every 3 consecutive combos, reduce all enemy combo lengths by 1.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity attack">
+                                    <div class="card-header">Bystander Death</div>
+                                    <div class="card-content">
+                                        <p>When defeating an enemy, 10% chance of killing a random enemy on the field.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity attack">
+                                    <div class="card-header">Combo Reduction: Correct</div>
+                                    <div class="card-content">
+                                        <p>When defeating an enemy, 40% chance of reducing an enemy's combo length by 1.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity attack">
+                                    <div class="card-header">Combo Reduction: Incorrect</div>
+                                    <div class="card-content">
+                                        <p>If you enter a wrong combo, 30% chance of reducing an enemy's combo length by 1.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity attack">
+                                    <div class="card-header">Combo Reduction: Longest Combo</div>
+                                    <div class="card-content">
+                                        <p>When defeating an enemy, 20% chance of reducing the enemy with the longest combo length by 2.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-category defense">
+                            <h3>DEFENSE CARDS</h3>
+                            <div class="card-grid">
+                                <div class="card-item a-rarity defense">
+                                    <div class="card-header">Heal II</div>
+                                    <div class="card-content">
+                                        <p>Heal by 1 heart for every 5 consecutive combos.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity defense">
+                                    <div class="card-header">Health II</div>
+                                    <div class="card-content">
+                                        <p>Increase Max Health by 2 hearts and heal to Max Health.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity defense">
+                                    <div class="card-header">Dodge II</div>
+                                    <div class="card-content">
+                                        <p>When you take damage, you have a 40% chance of not losing health.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity defense">
+                                    <div class="card-header">Heal: Even</div>
+                                    <div class="card-content">
+                                        <p>Heal by 2 hearts in Rounds of an even number.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity defense">
+                                    <div class="card-header">Heal I</div>
+                                    <div class="card-content">
+                                        <p>Heal by 1 heart at the end of each round.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity defense">
+                                    <div class="card-header">Health I</div>
+                                    <div class="card-content">
+                                        <p>Increase Max Health by 1.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity defense">
+                                    <div class="card-header">Wound Pulse</div>
+                                    <div class="card-content">
+                                        <p>When you take damage, repel enemies for 1 second.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity defense">
+                                    <div class="card-header">Dodge I</div>
+                                    <div class="card-content">
+                                        <p>When you take damage, slow enemies for 2 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity defense">
+                                    <div class="card-header">Blight</div>
+                                    <div class="card-content">
+                                        <p>When you take damage, you have a 20% chance of not losing health.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity defense">
+                                    <div class="card-header">Shield</div>
+                                    <div class="card-content">
+                                        <p>When an enemy is close to you, create a shield that lasts for 2 seconds. Cooldown: 10 seconds.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-category movement">
+                            <h3>MOVEMENT CARDS</h3>
+                            <div class="card-grid">
+                                <div class="card-item a-rarity movement">
+                                    <div class="card-header">Dash</div>
+                                    <div class="card-content">
+                                        <p>Dash towards specified direction.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity movement">
+                                    <div class="card-header">Speed</div>
+                                    <div class="card-content">
+                                        <p>Increase speed for 3 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity movement">
+                                    <div class="card-header">I SAID JUMP</div>
+                                    <div class="card-content">
+                                        <p>Jump towards the cursor's position.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity movement">
+                                    <div class="card-header">Switch!</div>
+                                    <div class="card-content">
+                                        <p>Switch positions with the furthest enemy.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-category score">
+                            <h3>SCORE CARDS</h3>
+                            <div class="card-grid">
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Double No Chance!</div>
+                                    <div class="card-content">
+                                        <p>Double score of an enemy when there are 3 combos in succession.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Multiplier Ceiling</div>
+                                    <div class="card-content">
+                                        <p>Set multiplier max from x3 to x5.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Multiplier Duration</div>
+                                    <div class="card-content">
+                                        <p>Increase multiplier duration from 4 to 5 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Free Score!</div>
+                                    <div class="card-content">
+                                        <p>Set multiplier base to x1.7.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Multiplier Increase II</div>
+                                    <div class="card-content">
+                                        <p>20% of getting a Flat 10,000 score at end of a round.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Score Insurance</div>
+                                    <div class="card-content">
+                                        <p>When damaged, reduce score decrease by half.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Combo Insurance</div>
+                                    <div class="card-content">
+                                        <p>When incorrectly entering a combo, 40% chance it does not remove the multiplier.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity score">
+                                    <div class="card-header">Double Chance</div>
+                                    <div class="card-content">
+                                        <p>50% Chance of doubling score of an enemy. Doubles before multiplier is applied.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item a-rarity score">
+                                    <div class="card-header">Combo Insurance</div>
+                                    <div class="card-content">
+                                        <p>When incorrectly entering a combo, 40% chance it does not remove the multiplier.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity score">
+                                    <div class="card-header">Double Chance</div>
+                                    <div class="card-content">
+                                        <p>50% Chance of doubling score of an enemy. Doubles before multiplier is applied.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity score">
+                                    <div class="card-header">Base Increase</div>
+                                    <div class="card-content">
+                                        <p>Increase base score by 10.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity score">
+                                    <div class="card-header">Multiplier Increase I</div>
+                                    <div class="card-content">
+                                        <p>Set multiplier base to x1.5.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity score">
+                                    <div class="card-header">North South Bonus</div>
+                                    <div class="card-content">
+                                        <p>For every Up and Down arrow used in a correct combo, increase score of an enemy by 2.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item b-rarity score">
+                                    <div class="card-header">East West Bonus</div>
+                                    <div class="card-content">
+                                        <p>For every Left and Right arrow used in a correct combo, increase score of an enemy by 2.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-category skill">
+                            <h3>SKILL CARDS</h3>
+                            <div class="card-grid">
+                                <div class="card-item s-rarity skill">
+                                    <div class="card-header">Invincible</div>
+                                    <div class="card-content">
+                                        <p>Become invulnerable from damage for 8 seconds. Cooldown: 25 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item s-rarity skill">
+                                    <div class="card-header">Shockwave</div>
+                                    <div class="card-content">
+                                        <p>Reduce combo length of all enemies by 3. Cooldown: 30 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item s-rarity skill">
+                                    <div class="card-header">Time Freeze</div>
+                                    <div class="card-content">
+                                        <p>Enemies freeze for 3 seconds. Cooldown: 25 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item s-rarity skill">
+                                    <div class="card-header">Disorient</div>
+                                    <div class="card-content">
+                                        <p>Enemies become distraught and move in random directions for 4 seconds. Cooldown: 20 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item s-rarity skill">
+                                    <div class="card-header">Your Just Like Me!</div>
+                                    <div class="card-content">
+                                        <p>Set a random amount of 2 to 4 enemies to have the same combo. Cooldown: 15 seconds.</p>
+                                    </div>
+                                </div>
+                                <div class="card-item s-rarity skill">
+                                    <div class="card-header">Cardinal Direction</div>
+                                    <div class="card-content">
+                                        <p>Change all enemies to have combos using only one cardinal direction. Cooldown: 60 seconds.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
