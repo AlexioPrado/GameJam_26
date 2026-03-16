@@ -14,10 +14,23 @@ function initializeMusicSelector() {
         document.getElementById('music-select').value = currentMusicIndex;
     }
     
+    // Load saved soundpack preference
+    const savedSoundPack = localStorage.getItem('selectedSoundPack');
+    if (savedSoundPack !== null) {
+        document.getElementById('soundpack-select').value = savedSoundPack;
+        updateAudioPaths(savedSoundPack);
+    }
+    
     // Add event listener for immediate selection
     const musicSelect = document.getElementById('music-select');
     if (musicSelect) {
         musicSelect.addEventListener('change', applyMusicSelection);
+    }
+    
+    // Add event listener for soundpack selection
+    const soundpackSelect = document.getElementById('soundpack-select');
+    if (soundpackSelect) {
+        soundpackSelect.addEventListener('change', applySoundPackSelection);
     }
 }
 
@@ -39,6 +52,58 @@ function applyMusicSelection() {
     }
 }
 
+function applySoundPackSelection() {
+    const soundpackSelect = document.getElementById('soundpack-select');
+    const selectedSoundPack = soundpackSelect.value;
+    
+    // Save the soundpack preference
+    localStorage.setItem('selectedSoundPack', selectedSoundPack);
+    
+    // Update audio paths
+    updateAudioPaths(selectedSoundPack);
+}
+
+function updateAudioPaths(soundPack) {
+    // Update arrow audio paths based on selected soundpack
+    if (soundPack === 'soundPack1') {
+        arrowAudioMap = {
+            "arrowup": "audioAssets/soundPack1/arrow1/jet-set-radio-spray-1_4CFwPkb.mp3",
+            "arrowdown": "audioAssets/soundPack1/arrow1/jet-set-radio-spray-2_pITyzB4.mp3",
+            "arrowleft": "audioAssets/soundPack1/arrow1/jet-set-radio-spray-3_c3UntD1.mp3",
+            "arrowright": "audioAssets/soundPack1/arrow1/jet-set-radio-spray-4_gni8YkP.mp3"
+        };
+        // Update combo audio paths for soundPack1
+        window.comboAudioPaths = {
+            success: "audioAssets/soundPack1/combo1/jet-set-radio-spray-full_DP2X9GC.mp3",
+            failure: "audioAssets/soundPack1/combo1/jet-set-radio-cancel.mp3"
+        };
+    } else if (soundPack === 'soundPack2') {
+        arrowAudioMap = {
+            "arrowup": "audioAssets/soundPack2/arrow2/game-fx-8-bit-chiptune-buzz-high-01.wav",
+            "arrowdown": "audioAssets/soundPack2/arrow2/game-fx-8-bit-chiptune-buzz-high-04.wav",
+            "arrowleft": "audioAssets/soundPack2/arrow2/game-fx-8-bit-chiptune-buzz-low-01.wav",
+            "arrowright": "audioAssets/soundPack2/arrow2/game-fx-8-bit-chiptune-buzz-low-04.wav"
+        };
+        // Update combo audio paths for soundPack2
+        window.comboAudioPaths = {
+            success: "audioAssets/soundPack2/combo2/game-fx-8-bit-chiptune-jump-06.wav",
+            failure: "audioAssets/soundPack2/combo2/game-fx-8-bit-chiptune-vibrato-01.wav"
+        };
+    } else if (soundPack === 'soundPack3') {
+        arrowAudioMap = {
+            "arrowup": "audioAssets/soundPack3/arrow3/adrian-explain-our-friend-group.mp3",
+            "arrowdown": "audioAssets/soundPack3/arrow3/fire-alarm-chirp.mp3",
+            "arrowleft": "audioAssets/soundPack3/arrow3/enrique.mp3",
+            "arrowright": "audioAssets/soundPack3/arrow3/pluh.mp3"
+        };
+        // Update combo audio paths for soundPack3
+        window.comboAudioPaths = {
+            success: "audioAssets/soundPack3/combo3/mi-bombo-duolingo.mp3",
+            failure: "audioAssets/soundPack3/combo3/shut-your-mouth-syfm.mp3"
+        };
+    }
+}
+
 // Update playRandomBackgroundMusic to use saved preference
 function playRandomBackgroundMusic() {
     // Stop current music if playing
@@ -55,8 +120,8 @@ function playRandomBackgroundMusic() {
     // Create new audio element
     currentBackgroundMusic = new Audio(selectedMusic);
     currentBackgroundMusic.loop = true;
-    currentBackgroundMusic.volume = 0.3; // Set volume to 30%
-    originalMusicVolume = 0.3; // Store original volume
+    currentBackgroundMusic.volume = 0.2; // Set volume to 20%
+    originalMusicVolume = 0.2; // Store original volume
     
     // Play the music
     currentBackgroundMusic.play().catch(error => {
@@ -450,26 +515,74 @@ const backgroundMusicFiles = [
 
 let currentBackgroundMusic = null;
 let originalMusicVolume = 0.3; // Store original volume
-
-// SCORE SYSTEM
 let totalScore = 0;
 let currentMultiplier = 1.0;
 let multiplierDuration = 0;
-const BASE_SCORE = 10;
+
+// Recent score additions tracking
+let recentScoreAdditions = [];
+const MAX_RECENT_SCORES = 5;
+const BASE_SCORE = 20; // Base score for defeating an enemy
 const MULTIPLIER_DURATION = 4000; // 4 seconds in milliseconds
 const MULTIPLIER_INCREMENT = 0.5;
 const MAX_MULTIPLIER = 3.0;
 
 // Update and store high score in localStorage
 function updateAndStoreScore(points) {
-    totalScore += Math.floor(points * currentMultiplier);
+    const pointsToAdd = Math.floor(points * currentMultiplier);
+    totalScore += pointsToAdd;
     document.getElementById('score-total').textContent = totalScore;
+    
+    // Add to recent score additions
+    addRecentScore(pointsToAdd);
     
     // Update high score in localStorage
     const storedHighScore = parseInt(localStorage.getItem('finalScore')) || 0;
     if (totalScore > storedHighScore) {
         localStorage.setItem('finalScore', totalScore);
     }
+}
+
+// Add a score to the recent scores list
+function addRecentScore(points) {
+    // Add new score to the beginning of the array
+    recentScoreAdditions.unshift(points);
+    
+    // Keep only the most recent scores
+    if (recentScoreAdditions.length > MAX_RECENT_SCORES) {
+        recentScoreAdditions.pop();
+    }
+    
+    // Update the display
+    updateRecentScoresDisplay();
+}
+
+// Update the recent scores display
+function updateRecentScoresDisplay() {
+    const recentScoresList = document.getElementById('recent-scores-list');
+    if (!recentScoresList) return;
+    
+    // Clear current display
+    recentScoresList.innerHTML = '';
+    
+    // Add each recent score with animation
+    recentScoreAdditions.forEach((score, index) => {
+        const scoreItem = document.createElement('div');
+        scoreItem.className = 'recent-score-item';
+        scoreItem.textContent = `+${score.toLocaleString()}`;
+        
+        // Add fade-out animation to oldest item if we're at max capacity
+        if (recentScoreAdditions.length === MAX_RECENT_SCORES && index === MAX_RECENT_SCORES - 1) {
+            scoreItem.classList.add('fade-out');
+        }
+        
+        recentScoresList.appendChild(scoreItem);
+        
+        // Remove fade-out class after animation completes
+        setTimeout(() => {
+            scoreItem.classList.remove('fade-out');
+        }, 500);
+    });
 }
 
 // Update and store highest combo in localStorage
@@ -481,16 +594,6 @@ function updateAndStoreCombo() {
     }
 }
 
-function updateScore(points) {
-    totalScore += Math.floor(points * currentMultiplier);
-    document.getElementById('score-total').textContent = totalScore;
-    
-    // Update high score in localStorage
-    const storedHighScore = parseInt(localStorage.getItem('finalScore')) || 0;
-    if (totalScore > storedHighScore) {
-        localStorage.setItem('finalScore', totalScore);
-    }
-}
 
 function increaseMultiplier() {
     currentMultiplier = Math.min(currentMultiplier + MULTIPLIER_INCREMENT, MAX_MULTIPLIER);
@@ -536,23 +639,24 @@ function updateComboDisplay() {
 
 function defeatEnemy() {
     // Calculate base score with combo length bonus
-    let scoreMultiplier = 1;
+    let basePoints = 20; // Base score for defeating an enemy
     
-    // Find the enemy that was defeated and check its combo length
+    // Find enemy that was defeated and check its combo length
     const enemies = document.querySelectorAll(".enemy");
     enemies.forEach(enemy => {
         if (!enemy.parentElement) { // Enemy has been removed
             // Find original combo data for this enemy
             const enemyCombo = enemyCombos.find(ec => ec.enemyElement === enemy);
             if (enemyCombo && enemyCombo.combo.length > 4) {
-                // Add 5 points per arrow past 4
+                // Add 5 bonus points per combo length increment beyond 4
                 const bonusPoints = (enemyCombo.combo.length - 4) * 5;
-                scoreMultiplier = 1 + (bonusPoints / BASE_SCORE);
+                basePoints += bonusPoints;
             }
         }
     });
     
-    updateAndStoreScore(BASE_SCORE * scoreMultiplier);
+    // Apply multiplier after base points and bonuses are calculated
+    updateAndStoreScore(basePoints);
     increaseMultiplier();
     updateComboDisplay();
     updateAndStoreCombo();
@@ -606,6 +710,23 @@ document.addEventListener('DOMContentLoaded', function() {
         playRandomBackgroundMusic();
         document.removeEventListener('click', initAudio);
     }, { once: true });
+    
+    // Handle tab visibility changes
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            // Tab is not visible - pause background music
+            if (currentBackgroundMusic) {
+                currentBackgroundMusic.pause();
+            }
+        } else {
+            // Tab is visible again - resume background music if it was playing
+            if (currentBackgroundMusic && !isGamePaused) {
+                currentBackgroundMusic.play().catch(error => {
+                    console.log("Background music resume failed:", error);
+                });
+            }
+        }
+    });
 });
 
 const heartsContainer = document.createElement("div");
@@ -1374,6 +1495,15 @@ menuButton.addEventListener("click", () => {
 // Grab player arrow container
 const playerArrowContainer = document.getElementById("player-arrow-container");
 
+// Helper function to compare arrays
+function arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+}
+
 // Map keys to arrow PNGs
 const arrowKeyMap = {
     "arrowup": "arrowAssets/arrowUp.png",
@@ -1383,11 +1513,11 @@ const arrowKeyMap = {
 };
 
 // Map arrow keys to audio files
-const arrowAudioMap = {
-    "arrowup": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-high-01.wav",
-    "arrowdown": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-high-04.wav",
-    "arrowleft": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-low-01.wav",
-    "arrowright": "audioAssets/arrow/game-fx-8-bit-chiptune-buzz-low-04.wav"
+let arrowAudioMap = {
+    "arrowup": `audioAssets/soundPack1/arrow1/jet-set-radio-spray-1_4CFwPkb.mp3`,
+    "arrowdown": `audioAssets/soundPack1/arrow1/jet-set-radio-spray-2_pITyzB4.mp3`,
+    "arrowleft": `audioAssets/soundPack1/arrow1/jet-set-radio-spray-3_c3UntD1.mp3`,
+    "arrowright": `audioAssets/soundPack1/arrow1/jet-set-radio-spray-4_gni8YkP.mp3`
 };
 
 // Track which keys are currently pressed
@@ -1395,16 +1525,6 @@ const keysPressedArrow = {};
 
 // Player arrow combo will be stored in an array of directions
 let playerComboDirections = [];
-
-
-// Helper function to compare arrays
-function arraysEqual(a, b) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-        if (a[i] !== b[i]) return false;
-    }
-    return true;
-}
 
 // Listen for keydown
 document.addEventListener("keydown", (e) => {
@@ -1486,8 +1606,8 @@ document.addEventListener("keydown", (e) => {
                 
                 // Play appropriate audio based on match result
                 if (matchedEnemies.length > 0) {
-                    // Success - play jump sound
-                    const successAudio = new Audio("audioAssets/game-fx-8-bit-chiptune-jump-06.wav");
+                    // Success - play combo sound using dynamic paths
+                    const successAudio = new Audio(window.comboAudioPaths.success);
                     successAudio.volume = 0.4;
                     successAudio.play().catch(e => console.log("Success audio play failed:", e));
                     
@@ -1512,8 +1632,8 @@ document.addEventListener("keydown", (e) => {
                     // Check if wave is complete after defeating enemies
                     checkWaveCompletion();
                 } else {
-                    // Failure - play vibrato sound
-                    const failureAudio = new Audio("audioAssets/game-fx-8-bit-chiptune-vibrato-01.wav");
+                    // Failure - play combo sound using dynamic paths
+                    const failureAudio = new Audio(window.comboAudioPaths.failure);
                     failureAudio.volume = 0.4;
                     failureAudio.play().catch(e => console.log("Failure audio play failed:", e));
                     
@@ -1536,6 +1656,12 @@ document.addEventListener("keydown", (e) => {
             e.preventDefault();
         }
     }
+});
+
+// Keyup resets
+document.addEventListener("keyup", (e) => {
+    const key = e.key.toLowerCase();
+    keysPressedArrow[key] = false;
 });
 
 // PAUSE SYSTEM

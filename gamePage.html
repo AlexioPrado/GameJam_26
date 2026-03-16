@@ -33,6 +33,9 @@
             <div class="multiplier-bar" id="multiplier-bar"></div>
         </div>
         <div class="combo-counter" id="combo-counter">Combo: 0</div>
+        <div class="recent-scores-list" id="recent-scores-list">
+            <!-- Recent score additions will be added here -->
+        </div>
     </div>
         
     <!-- Player Arrow Combo Container -->
@@ -151,8 +154,8 @@
                     <h2>Audio Settings</h2>
                     <div class="setting-item">
                         <label for="music-volume">Music Volume</label>
-                        <input type="range" id="music-volume" min="0" max="100" value="30">
-                        <span id="music-volume-value">30%</span>
+                        <input type="range" id="music-volume" min="0" max="100" value="20">
+                        <span id="music-volume-value">20%</span>
                     </div>
                     <div class="setting-item">
                         <label for="sfx-volume">Sound Effects Volume</label>
@@ -166,6 +169,16 @@
                                 <option value="0">Retro Retro Revolution</option>
                                 <option value="1">Boohbah Adventure</option>
                                 <option value="2">Karim Time</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label>Sound Pack</label>
+                        <div class="soundpack-select">
+                            <select id="soundpack-select">
+                                <option value="soundPack1">Jet Set</option>
+                                <option value="soundPack2">BIT LIT</option>
+                                <option value="soundPack3">Meme</option>
                             </select>
                         </div>
                     </div>
