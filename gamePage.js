@@ -527,6 +527,12 @@ const MULTIPLIER_DURATION = 4000; // 4 seconds in milliseconds
 const MULTIPLIER_INCREMENT = 0.5;
 const MAX_MULTIPLIER = 3.0;
 
+// Initialize combo audio paths with default soundpack
+window.comboAudioPaths = {
+    success: "audioAssets/soundPack1/combo1/jet-set-radio-spray-full_DP2X9GC.mp3",
+    failure: "audioAssets/soundPack1/combo1/jet-set-radio-cancel.mp3"
+};
+
 // Update and store high score in localStorage
 function updateAndStoreScore(points) {
     const pointsToAdd = Math.floor(points * currentMultiplier);
