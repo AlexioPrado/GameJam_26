@@ -137,7 +137,7 @@ function startGame() {
     window.location.href = "gamePage.html";
 }
 
-// Initialize leaderboard on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     displayLeaderboard();
     

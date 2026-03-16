@@ -1090,7 +1090,7 @@ function spawnEnemiesForWave(round, wave) {
 spawnEnemiesForWave(currentRound, currentWave);
 
 // Movement speed of enemies (pixels per frame)
-const enemySpeed = 0.7;
+const enemySpeed = 1.2;
 
 function moveEnemiesTowardPlayer() {
     // Don't move enemies if game is paused
@@ -1101,29 +1101,36 @@ function moveEnemiesTowardPlayer() {
     
     const enemies = document.querySelectorAll(".enemy");
 
-    const playerRect = player.getBoundingClientRect();
-    const playerX = playerRect.left + playerRect.width / 2;
-    const playerY = playerRect.top + playerRect.height / 2;
+    // Get player position using stored coordinates instead of getBoundingClientRect for consistency
+    const playerCenterX = playerX + 30; // Player center (assuming 60px width)
+    const playerCenterY = playerY + 30; // Player center (assuming 60px height)
 
     enemies.forEach((enemy) => {
-        const enemyRect = enemy.getBoundingClientRect();
-        let enemyX = enemyRect.left + enemyRect.width / 2;
-        let enemyY = enemyRect.top + enemyRect.height / 2;
+        // Get enemy current position from offsetLeft/offsetTop for consistency
+        let enemyX = enemy.offsetLeft + 30; // Enemy center (assuming 60px width)
+        let enemyY = enemy.offsetTop + 30; // Enemy center (assuming 60px height)
 
         // Vector toward player
-        let dx = playerX - enemyX;
-        let dy = playerY - enemyY;
+        let dx = playerCenterX - enemyX;
+        let dy = playerCenterY - enemyY;
 
-        // Normalize
+        // Calculate distance
         const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance > 0) {
+        
+        // Only move if not already at player position (prevent division by zero)
+        if (distance > 1) { // Minimum threshold to prevent tiny movements
+            // Normalize direction vector
             dx /= distance;
             dy /= distance;
-        }
 
-        // Move enemy (no collision avoidance with other enemies)
-        enemy.style.left = (enemy.offsetLeft + dx * enemySpeed) + "px";
-        enemy.style.top = (enemy.offsetTop + dy * enemySpeed) + "px";
+            // Apply consistent movement speed regardless of distance
+            // Use a slightly higher speed to ensure noticeable movement
+            const moveSpeed = distance < 50 ? enemySpeed * 1.5 : enemySpeed;
+            
+            // Move enemy
+            enemy.style.left = (enemy.offsetLeft + dx * moveSpeed) + "px";
+            enemy.style.top = (enemy.offsetTop + dy * moveSpeed) + "px";
+        }
     });
 
     requestAnimationFrame(moveEnemiesTowardPlayer);
