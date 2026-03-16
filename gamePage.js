@@ -1613,9 +1613,13 @@ document.addEventListener("keydown", (e) => {
                 // Play appropriate audio based on match result
                 if (matchedEnemies.length > 0) {
                     // Success - play combo sound using dynamic paths
-                    const successAudio = new Audio(window.comboAudioPaths.success);
-                    successAudio.volume = 0.4;
-                    successAudio.play().catch(e => console.log("Success audio play failed:", e));
+                    try {
+                        const successAudio = new Audio(window.comboAudioPaths.success);
+                        successAudio.volume = 0.4;
+                        successAudio.play().catch(e => console.log("Success audio play failed:", e));
+                    } catch (error) {
+                        console.log("Error creating success audio:", error);
+                    }
                     
                     // Increment consecutive combo counter
                     consecutiveComboCount++;
@@ -1639,9 +1643,13 @@ document.addEventListener("keydown", (e) => {
                     checkWaveCompletion();
                 } else {
                     // Failure - play combo sound using dynamic paths
-                    const failureAudio = new Audio(window.comboAudioPaths.failure);
-                    failureAudio.volume = 0.4;
-                    failureAudio.play().catch(e => console.log("Failure audio play failed:", e));
+                    try {
+                        const failureAudio = new Audio(window.comboAudioPaths.failure);
+                        failureAudio.volume = 0.4;
+                        failureAudio.play().catch(e => console.log("Failure audio play failed:", e));
+                    } catch (error) {
+                        console.log("Error creating failure audio:", error);
+                    }
                     
                     // Reset consecutive combo counter on wrong combo
                     consecutiveComboCount = 0;
