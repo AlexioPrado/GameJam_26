@@ -205,10 +205,80 @@ let editingKeybind = null;
             if (pauseOverlay) {
                 pauseOverlay.style.display = 'none';
             }
+            
+            // Restore background music volume
+            if (currentBackgroundMusic) {
+                currentBackgroundMusic.volume = originalMusicVolume;
+            }
+            
             // Resume game
             isGamePaused = false;
         });
     }
+
+    // Add restart button functionality
+    const restartBtn = document.getElementById('restart-btn');
+    if (restartBtn) {
+        restartBtn.addEventListener('click', function() {
+            // Reload the page to restart the game
+            window.location.reload();
+        });
+    }
+
+    // Add help button functionality
+    const helpBtn = document.getElementById('help-btn');
+    if (helpBtn) {
+        helpBtn.addEventListener('click', function() {
+            // Hide pause overlay
+            const pauseOverlay = document.getElementById('pause-overlay');
+            if (pauseOverlay) {
+                pauseOverlay.style.display = 'none';
+            }
+            
+            // Show help overlay
+            const helpOverlay = document.getElementById('help-overlay');
+            if (helpOverlay) {
+                helpOverlay.style.display = 'flex';
+            }
+        });
+    }
+
+    // Add help exit button functionality
+    const helpExitBtn = document.getElementById('help-exit-btn');
+    if (helpExitBtn) {
+        helpExitBtn.addEventListener('click', function() {
+            // Hide help overlay
+            const helpOverlay = document.getElementById('help-overlay');
+            if (helpOverlay) {
+                helpOverlay.style.display = 'none';
+            }
+            
+            // Show pause overlay
+            const pauseOverlay = document.getElementById('pause-overlay');
+            if (pauseOverlay) {
+                pauseOverlay.style.display = 'flex';
+            }
+        });
+    }
+
+    // Help section switching functionality
+    const helpSectionTitles = document.querySelectorAll('.help-section-title');
+    helpSectionTitles.forEach(title => {
+        title.addEventListener('click', function() {
+            const section = this.dataset.section;
+            
+            // Remove active class from all titles and sections
+            helpSectionTitles.forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.help-section').forEach(s => s.classList.remove('active'));
+            
+            // Add active class to clicked title and corresponding section
+            this.classList.add('active');
+            const targetSection = document.getElementById(`${section}-section`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        });
+    });
 
 // Card creation utilities
 function createCardElement(card, index, isWaveCard) {
@@ -400,18 +470,6 @@ function hideRoundCompletion() {
 }
 
 
-function showCardArchive() {
-    const cardArchiveOverlay = document.getElementById('card-archive-overlay');
-    cardArchiveOverlay.style.display = 'flex';
-    
-    // Initialize with defense cards
-    loadCardType('defense');
-    
-    // Pause game while archive is open
-    if (!isGamePaused) {
-        togglePause();
-    }
-}
 
 function hideCardArchive() {
     const cardArchiveOverlay = document.getElementById('card-archive-overlay');
@@ -421,78 +479,6 @@ function hideCardArchive() {
     const pauseOverlay = document.getElementById('pause-overlay');
     pauseOverlay.style.display = 'flex';
 }
-
-function loadCardType(type) {
-    currentCardType = type;
-    selectedCard = null;
-    
-    // Update active button styling
-    document.querySelectorAll('.card-type').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector(`[data-type="${type}"]`).classList.add('active');
-    
-    // Clear and populate card container with cards
-    const cardList = document.getElementById('card-list');
-    cardList.innerHTML = '';
-    
-    // Get cards from waveRoundCardDatabase
-    const cards = waveRoundCardDatabase[type] || [];
-    
-    // Display card count as absolute positioned
-    const countDisplay = document.createElement('div');
-    countDisplay.className = 'card-count';
-    countDisplay.textContent = `${cards.length} cards in ${type.charAt(0).toUpperCase() + type.slice(1)}`;
-    countDisplay.style.position = 'absolute';
-    countDisplay.style.top = '0';
-    countDisplay.style.left = '0';
-    countDisplay.style.right = '0';
-    countDisplay.style.textAlign = 'center';
-    countDisplay.style.color = '#ccc';
-    countDisplay.style.fontSize = '1.2em';
-    countDisplay.style.padding = '10px';
-    countDisplay.style.background = 'rgba(0, 0, 0, 0.5)';
-    countDisplay.style.zIndex = '10';
-    cardList.appendChild(countDisplay);
-    
-    // Create card elements for each card
-    cards.forEach((card, index) => {
-        const cardContainer = document.createElement('div');
-        cardContainer.className = `archive-card ${card.rarity.toLowerCase()}-rarity`;
-        cardContainer.dataset.cardId = card.id;
-        
-        // Create card structure similar to game cards
-        const cardHeader = document.createElement('div');
-        cardHeader.className = 'card-header';
-        cardHeader.textContent = type.toUpperCase();
-        cardHeader.style.backgroundColor = getCardTypeColor(type);
-        
-        const cardContent = document.createElement('div');
-        cardContent.className = 'card-content';
-        
-        const cardTitle = document.createElement('div');
-        cardTitle.className = 'card-title';
-        cardTitle.textContent = card.name;
-        
-        const cardDescription = document.createElement('div');
-        cardDescription.className = 'card-text-area';
-        cardDescription.textContent = card.description;
-        
-        const cardCircle = document.createElement('div');
-        cardCircle.className = 'card-circle';
-        cardCircle.textContent = card.rarity;
-        
-        // Assemble card
-        cardContent.appendChild(cardTitle);
-        cardContent.appendChild(cardDescription);
-        cardContainer.appendChild(cardHeader);
-        cardContainer.appendChild(cardContent);
-        cardContainer.appendChild(cardCircle);
-        
-        cardList.appendChild(cardContainer);
-    });
-    
-    }
 
 function selectCard(card) {
     selectedCard = card;
@@ -827,6 +813,26 @@ function updatePlayerPosition() {
     if (keysPressed[customKeybinds.moveLeft]) playerX -= speed;
     if (keysPressed[customKeybinds.moveRight]) playerX += speed;
 
+    // Boundary checking - prevent player from going outside screen
+    const playerWidth = 60; // Player width in pixels
+    const playerHeight = 60; // Player height in pixels
+    
+    // Check horizontal boundaries (increase border for top/left)
+    if (playerX < -playerWidth/2) playerX = -playerWidth/2;
+    if (playerX + playerWidth > window.innerWidth + playerWidth/2) playerX = window.innerWidth + playerWidth/2;
+    
+    // Check vertical boundaries (increase border for top)
+    if (playerY < -playerHeight/2) playerY = -playerHeight/2;
+    if (playerY + playerHeight > window.innerHeight + playerHeight/2) playerY = window.innerHeight + playerHeight/2;
+    
+    // Check horizontal boundaries (decrease border for right)
+    if (playerX + playerWidth/2 > window.innerWidth) playerX = window.innerWidth - playerWidth/2;
+    if (playerX/2 < 0) playerX = 0;
+    
+    // Check vertical boundaries (decrease border for bottom)
+    if (playerY + playerHeight/2 > window.innerHeight) playerY = window.innerHeight - playerHeight/2;
+    if (playerY/2 < 0) playerY = 0;
+    
     // apply new position
     player.style.left = playerX + "px";
     player.style.top = playerY + "px";

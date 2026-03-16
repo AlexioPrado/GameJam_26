@@ -10,7 +10,16 @@
 <body>
     <div class="menu-container">
         <div class="game-title">Tower of Boohbah</div>
-        <button class="start-button" onclick="startGame()">Start</button>
+        <div class="name-input-container">
+            <input type="text" id="player-name" class="name-input" placeholder="Enter your name" maxlength="10" autocomplete="off">
+            <button class="start-button" onclick="startGame()">Start</button>
+        </div>
+        <div class="leaderboard-container">
+            <h3 class="leaderboard-title">Top Players</h3>
+            <div class="leaderboard-list" id="leaderboard-list">
+                <!-- Leaderboard entries will be added here -->
+            </div>
+        </div>
     </div>
     <script src="startMenu.js"></script>
 </body>

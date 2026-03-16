@@ -53,9 +53,123 @@ function updateHighScore(currentScore, currentCombo) {
     }
 }
 
+// Leaderboard management (shared with startMenu.js)
+function getLeaderboard() {
+    const leaderboard = localStorage.getItem('leaderboard');
+    return leaderboard ? JSON.parse(leaderboard) : [];
+}
+
+function saveLeaderboard(leaderboard) {
+    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+}
+
+function addToLeaderboard(name, score, combo) {
+    const leaderboard = getLeaderboard();
+    
+    // Check if player already exists
+    const existingPlayerIndex = leaderboard.findIndex(entry => entry.name === name);
+    
+    if (existingPlayerIndex !== -1) {
+        // Player exists, check if new score is higher
+        const existingEntry = leaderboard[existingPlayerIndex];
+        
+        if (score > existingEntry.score || (score === existingEntry.score && combo > existingEntry.combo)) {
+            // Replace with better score
+            leaderboard[existingPlayerIndex] = {
+                name: name,
+                score: score,
+                combo: combo,
+                date: new Date().toISOString()
+            };
+        } else {
+            // New score is not better, don't update
+            return leaderboard;
+        }
+    } else {
+        // New player, add to leaderboard
+        leaderboard.push({
+            name: name,
+            score: score,
+            combo: combo,
+            date: new Date().toISOString()
+        });
+    }
+    
+    // Sort by score (descending), then by combo (descending)
+    leaderboard.sort((a, b) => {
+        if (b.score !== a.score) {
+            return b.score - a.score;
+        }
+        return b.combo - a.combo;
+    });
+    
+    // Keep only top 10 players
+    const top10 = leaderboard.slice(0, 10);
+    saveLeaderboard(top10);
+    
+    return top10;
+}
+
+function displayLeaderboard(containerId, highlightName = null) {
+    const leaderboard = getLeaderboard();
+    const leaderboardList = document.getElementById(containerId);
+    
+    if (!leaderboardList) return;
+    
+    leaderboardList.innerHTML = '';
+    
+    if (leaderboard.length === 0) {
+        leaderboardList.innerHTML = `
+            <div class="leaderboard-header">
+                <div class="rank">#</div>
+                <div class="player-name">NAME</div>
+                <div class="player-score">SCORE</div>
+                <div class="player-combo">COMBO</div>
+            </div>
+            <div class="no-entries">No high scores yet!</div>
+        `;
+        return;
+    }
+    
+    // Add header row
+    const headerElement = document.createElement('div');
+    headerElement.className = 'leaderboard-header';
+    headerElement.innerHTML = `
+        <div class="rank">#</div>
+        <div class="player-name">NAME</div>
+        <div class="player-score">SCORE</div>
+        <div class="player-combo">COMBO</div>
+    `;
+    leaderboardList.appendChild(headerElement);
+    
+    leaderboard.forEach((entry, index) => {
+        const entryElement = document.createElement('div');
+        entryElement.className = 'leaderboard-entry';
+        
+        // Highlight current player's entry
+        if (highlightName && entry.name === highlightName) {
+            entryElement.classList.add('current-player');
+        }
+        
+        entryElement.innerHTML = `
+            <div class="rank">#${index + 1}</div>
+            <div class="player-name">${entry.name}</div>
+            <div class="player-score">${entry.score.toLocaleString()}</div>
+            <div class="player-combo">${entry.combo}x</div>
+        `;
+        leaderboardList.appendChild(entryElement);
+    });
+}
+
 // Initialize game over screen
 document.addEventListener('DOMContentLoaded', function() {
     const gameData = getGameData();
+    const currentPlayerName = localStorage.getItem('currentPlayerName') || 'Anonymous';
+    
+    // Add current player to leaderboard if they have a score
+    if (gameData.finalScore > 0) {
+        addToLeaderboard(currentPlayerName, gameData.finalScore, gameData.highestCombo);
+    }
     
     // Update score displays
     const finalScoreElement = document.getElementById('final-score');
@@ -82,6 +196,9 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('highestCombo', '0');
         }, 2000); // Reset after animation completes
     }
+    
+    // Display leaderboard with current player highlighted
+    displayLeaderboard('end-leaderboard-list', currentPlayerName);
     
     // Add event listeners to buttons
     const playAgainBtn = document.getElementById('play-again-btn');

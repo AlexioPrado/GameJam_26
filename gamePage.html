@@ -101,37 +101,13 @@
             <div class="pause-text">Paused</div>
             <div class="pause-buttons">
                 <button class="pause-button-item" id="continue-btn">Continue</button>
-                <button class="pause-button-item" id="card-archive-btn">Card Archive</button>
+                <button class="pause-button-item" id="restart-btn">Restart</button>
                 <button class="pause-button-item" id="settings-btn">Settings</button>
+                <button class="pause-button-item" id="help-btn">Help</button>
             </div>
         </div>
     </div>
 
-    <!-- Card Archive Overlay (Hidden by default) -->
-    <div id="card-archive-overlay" class="overlay">
-        <div class="card-archive-content">
-            <div class="card-archive-header">
-                <h2>Card Archive</h2>
-                <button class="close-btn" id="card-archive-close-btn">×</button>
-            </div>
-            <div class="card-archive-body">
-                <!-- Left container - Card types -->
-                <div class="card-types-container">
-                    <h3>Card Types</h3>
-                    <div class="card-type-list">
-                        <div class="card-type active" data-type="defense">Defense</div>
-                        <div class="card-type" data-type="attack">Attack</div>
-                        <div class="card-type" data-type="movement">Movement</div>
-                        <div class="card-type" data-type="score">Score</div>
-                        <div class="card-type" data-type="skill">Skill</div>
-                    </div>
-                </div>
-                
-                <!-- Right container - Card list taking full space -->
-                <div class="cards-details-container">
-                    <div class="card-list-container">
-                        <div class="card-list" id="card-list">
-                            <!-- Cards will be populated dynamically -->
                         </div>
                     </div>
                 </div>
@@ -272,6 +248,115 @@
                         <p>Version: 1.6.7</p>
                         <p>A retro-style arcade game with arrow combo mechanics.</p>
                         <p>Defeat enemies by matching their arrow patterns!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Overlay (Hidden by default) -->
+    <div id="help-overlay" class="overlay">
+        <div class="help-content">
+            <button class="help-exit-btn" id="help-exit-btn">Exit</button>
+            <div class="help-sidebar">
+                <div class="help-section-title active" data-section="game">Game</div>
+                <div class="help-section-title" data-section="controls">Controls</div>
+                <div class="help-section-title" data-section="cards">Cards</div>
+            </div>
+            <div class="help-main">
+                <!-- Game Section -->
+                <div class="help-section active" id="game-section">
+                    <h2>Game</h2>
+                    <div class="help-content-area">
+                        <p><strong>What is this game about?</strong></p>
+                        <p>This is a retro-style arcade game where you defeat enemies by matching their arrow patterns. Use your arrow keys to input combos and defeat enemies before they reach you!</p>
+                        
+                        <p><strong>How Waves and Rounds Work:</strong></p>
+                        <ul>
+                            <li><strong>Rounds:</strong> Each round consists of 3 waves of enemies</li>
+                            <li><strong>Waves:</strong> Waves get progressively harder with more enemies</li>
+                            <li><strong>Progression:</strong> Complete all 3 waves to advance to the next round</li>
+                            <li><strong>Difficulty:</strong> Enemy count increases and spawn rates get faster as you progress</li>
+                        </ul>
+                        
+                        <p><strong>Enemy Combos:</strong></p>
+                        <p>Each enemy has a specific arrow combo pattern. Match the exact sequence to defeat them and earn points!</p>
+                        
+                        <p><strong>Card System:</strong></p>
+                        <p>Cards provide powerful abilities and bonuses to help you in battle. Choose wisely from the cards offered to you!</p>
+                        <ul>
+                            <li><strong>Wave Cards:</strong> After each wave (except the final wave), you can choose from 3 cards</li>
+                            <li><strong>Round Cards:</strong> After completing all 3 waves in a round, you can choose from 2 cards</li>
+                            <li><strong>Card Types:</strong> Cards come in different types (Defense, Attack, Movement, Score, Skill)</li>
+                            <li><strong>Rarity System:</strong> Cards have different rarities (S, A, B) affecting their power</li>
+                        </ul>
+                        
+                        <p><strong>Scoring System:</strong></p>
+                        <p>Rack up points by defeating enemies and building combo streaks! Here's how the scoring works:</p>
+                        <ul>
+                            <li><strong>Base Score:</strong> Each enemy defeated gives you base points (20 points)</li>
+                            <li><strong>Combo Bonuses:</strong> Longer enemy combos give bonus points (5 points per arrow beyond 4)</li>
+                            <li><strong>Score Display:</strong> Your total score is shown prominently on the left side</li>
+                            <li><strong>Recent Points:</strong> See your last 5 score additions below the combo tracker</li>
+                        </ul>
+                        
+                        <p><strong>Multiplier System:</strong></p>
+                        <p>Build up multipliers by defeating enemies consecutively without mistakes!</p>
+                        <ul>
+                            <li><strong>Multiplier Growth:</strong> Each consecutive defeat increases your multiplier</li>
+                            <li><strong>Maximum Multiplier:</strong> Multiplier caps at 3.0x for balanced gameplay</li>
+                            <li><strong>Duration:</strong> Multiplier lasts for 4 seconds, extend by defeating more enemies</li>
+                            <li><strong>Visual Indicator:</strong> Multiplier number and progress bar show current status</li>
+                        </ul>
+                        
+                        <p><strong>Combo Tracker:</strong></p>
+                        <p>Track your consecutive enemy defeats to maximize your scoring potential!</p>
+                        <ul>
+                            <li><strong>Combo Counter:</strong> Shows current streak of consecutive defeats</li>
+                            <li><strong>High Score Tracking:</strong> Your best combo is saved automatically</li>
+                            <li><strong>Combo Breaking:</strong> Mistakes or taking damage breaks your combo streak</li>
+                            <li><strong>Strategy:</strong> Maintain combos to keep multiplier active and score high</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Controls Section -->
+                <div class="help-section hidden" id="controls-section">
+                    <h2>Controls</h2>
+                    <div class="help-content-area">
+                        <p><strong>How to Defeat Enemies:</strong></p>
+                        <p>Defeating enemies requires matching their arrow combo patterns exactly. Here's how to do it:</p>
+                        
+                        <p><strong>Arrow Input:</strong></p>
+                        <ul>
+                            <li><strong>Arrow Keys:</strong> Use the arrow keys (↑ ↓ ← →) to input combos</li>
+                            <li><strong>Visual Feedback:</strong> Your input appears at the bottom of the screen</li>
+                            <li><strong>Combo Display:</strong> Watch the enemy's arrow pattern above them</li>
+                            <li><strong>Match Order:</strong> Input arrows in the exact same sequence as shown</li>
+                        </ul>
+                        
+                        <p><strong>Submitting Combos:</strong></p>
+                        <ul>
+                            <li><strong>Submit Key:</strong> Press Enter to submit your combo</li>
+                            <li><strong>Clear Combo:</strong> Press Enter again to clear and start over</li>
+                            <li><strong>Backspace:</strong> Remove the last arrow if you make a mistake</li>
+                            <li><strong>Perfect Match:</strong> Exact match defeats the enemy instantly!</li>
+                        </ul>
+                        
+                        <p><strong>Tips for Success:</strong></p>
+                        <ul>
+                            <li><strong>Memorize Patterns:</strong> Remember enemy combos for quick defeats</li>
+                            <li><strong>Stay Focused:</strong> Don't let enemies get too close while inputting</li>
+                            <li><strong>Practice Speed:</strong> Faster combo input = better survival rate</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Cards Section -->
+                <div class="help-section hidden" id="cards-section">
+                    <h2>Cards</h2>
+                    <div class="help-content-area">
+                        <!-- Cards information will be added here -->
                     </div>
                 </div>
             </div>
